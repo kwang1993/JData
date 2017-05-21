@@ -8,13 +8,14 @@ import implicit
 
 
 def dataFrameInfo(df):
-    print "=================DataFrame Info=================="
+    print "================= DataFrame Info =================="
     print df
     print df.dtypes
+    #print df.info()
     #print df.describe()    
      
 def loadData(path, fname):
-    print "=================Load Data=================="
+    print "================= Load Data =================="
     print "Loading "+ fname +" ..."
     df = pd.read_csv(path + fname, index_col = False)
     print "Loading "+ fname +" finished."  
@@ -22,23 +23,23 @@ def loadData(path, fname):
     return df
 
 def to_user_item_matrix(df, user_col, item_col): # return csr_matrix
-    print "=================Converting to user-item matrix=================="
+    print "================= User-item matrix =================="
     users = df[user_col]
     items = df[item_col]
-    ones = np.ones(df.shape[0])
+    ones = np.ones(df.shape[0]) 
     # https://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.sparse.coo_matrix.html
     # https://en.wikipedia.org/wiki/Sparse_matrix
-    mat = coo_matrix((ones, (users, items))) 
-    print mat.shape
-    print mat.dtype
-    return mat.tocsr()
+    R = coo_matrix((ones, (users, items))) 
+    print R.shape
+    print R.dtype
+    return R.tocsr() # convert coo_matrix to csr_matrix
 
 def model_implicit_data(user_item_mat):
-    print "=================Model_implicit=================="
+    print "================= Model implicit data =================="
     # initialize a model
     model = implicit.als.AlternatingLeastSquares(factors=50, regularization=0.01)
     # train the model on a sparse matrix of item/user/confidence weights
-    model.fit(user_item_mat.transpose())    
+    model.fit(user_item_mat.transpose())      
     return model
 
 def getRecommendations(model, user_item_mat, userid): # recommend items for a user
@@ -70,17 +71,25 @@ def main():
     # convert to sparse matrix
     df_a2_order = df_a2[df_a2['type'] == 4].drop(['type'], axis = 1)
     
-    mat_a2 = to_user_item_matrix(df_a2_order, 'user_id', 'sku_id')
+    R_a2_order = to_user_item_matrix(df_a2_order, 'user_id', 'sku_id')
 
     # MF
-    model = model_implicit_data(mat_a2)
+    model = model_implicit_data(R_a2_order)
     
     userid = 203632
-    recommendations = getRecommendations(model, mat_a2, userid)
+    recommendations = getRecommendations(model, R_a2_order, userid)
     
     itemid = 20077
     related = getSimilarItems(model, itemid)
     
+    # Logistic
+
+    '''Add code here'''
+    
+    # BPR
+    
+    '''Add code here'''
+
     
 if __name__ == '__main__':
     main()
