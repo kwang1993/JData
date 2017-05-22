@@ -4,7 +4,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.sparse import coo_matrix, csr_matrix 
 import implicit
-
+import logistic_mf
 
 
 def dataFrameInfo(df):
@@ -34,7 +34,7 @@ def to_user_item_matrix(df, user_col, item_col): # return csr_matrix
     print R.dtype
     return R.tocsr() # convert coo_matrix to csr_matrix
 
-def model_implicit_data(user_item_mat):
+def model_implicit_data(user_item_mat): # input should be Cui matrix
     print "================= Model implicit data =================="
     # initialize a model
     model = implicit.als.AlternatingLeastSquares(factors=50, regularization=0.01)
@@ -72,12 +72,15 @@ def main():
     df_a2_order = df_a2[df_a2['type'] == 4].drop(['type'], axis = 1)
     
     R_a2_order = to_user_item_matrix(df_a2_order, 'user_id', 'sku_id')
+    
+    C_a2_order = R_a2_order
+    '''C = 1 + a * R ???'''
 
     # MF
-    model = model_implicit_data(R_a2_order)
+    model = model_implicit_data(C_a2_order)
     
     userid = 203632
-    recommendations = getRecommendations(model, R_a2_order, userid)
+    recommendations = getRecommendations(model, C_a2_order, userid)
     
     itemid = 20077
     related = getSimilarItems(model, itemid)

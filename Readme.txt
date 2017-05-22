@@ -6,5 +6,6 @@ Description:
 	The data is under the directory ../JData/.
 	
 Usage: 
+	pip install implicit 
 	python proj.py
 
