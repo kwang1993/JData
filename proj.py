@@ -29,7 +29,7 @@ def loadData(path, fname):
     print "================= Load Data =================="
     print "Loading "+ fname +" ..."
     df = pd.read_csv(path + fname, index_col = False)
-    df = df.drop_duplicates()
+    df.drop_duplicates(inplace = True, keep = 'first')
     df['user_id'] = df['user_id'].astype("int64") 
     df['time'] = df['time'].astype("datetime64[ns]")
     # df["time"].dt.month
@@ -93,12 +93,18 @@ def main():
     # load data frame
     df_a2 = loadData(dataDir, 'JData_Action_201602.csv')
     dataFrameInfo(df_a2)
+    
+    
     df_a2_click_8 = dfTypeCate(df_a2, 6, 8)
+    df_a2_click_8['user_id'].value_counts() # group by user
     df_a2_order_8 = dfTypeCate(df_a2, 4, 8)
+    df_a2_order_8['user_id'].value_counts().value_counts() # group by counts
+    
     df_a3 = loadData(dataDir, 'JData_Action_201603.csv')
     dataFrameInfo(df_a3)
     df_a3_click_8 = dfTypeCate(df_a3, 6, 8)
     df_a3_order_8 = dfTypeCate(df_a3, 4, 8)
+    
     df_a4 = loadData(dataDir, 'JData_Action_201604.csv') 
     dataFrameInfo(df_a4)
     df_a4_click_8 = dfTypeCate(df_a4, 6, 8)
