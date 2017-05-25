@@ -4,15 +4,20 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from scipy.sparse import coo_matrix, csr_matrix 
 import implicit
-import logistic_mf
+from datetime import datetime
 
 
 def dataFrameInfo(df):
     print "================= DataFrame Info =================="
-    print df
+    print df.head(15)
+    print "\nshape:"
+    print df.shape
+    print "\ndtypes:"
     print df.dtypes
-    #print df.info()
-    #print df.describe()    
+    print "\ninfo:"
+    print df.info()
+    print "\nddescribe:"
+    print df.describe()    
      
 def loadData(path, fname):
     print "================= Load Data =================="
@@ -22,11 +27,9 @@ def loadData(path, fname):
     dataFrameInfo(df)
     return df
 
-def to_user_item_matrix(df, user_col, item_col): # return csr_matrix
+def to_user_item_matrix(users, items): # return csr_matrix
     print "================= User-item matrix =================="
-    users = df[user_col]
-    items = df[item_col]
-    ones = np.ones(df.shape[0]) 
+    ones = np.ones(len(users)) 
     # https://docs.scipy.org/doc/scipy-0.14.0/reference/generated/scipy.sparse.coo_matrix.html
     # https://en.wikipedia.org/wiki/Sparse_matrix
     R = coo_matrix((ones, (users, items))) 
@@ -55,6 +58,8 @@ def getSimilarItems(model, itemid): # find related items
     for i, p in related:
         print i, p
     return related
+
+
     
 def main():
     dataDir = '../JData/'
@@ -67,15 +72,39 @@ def main():
 
     # load data frame
     df_a2 = loadData(dataDir, 'JData_Action_201602.csv')
+    
+    df_a2['user_id'] = df_a2['user_id'].astype("int64") 
+    df_a2['time'] = df_a2['time'].astype("datetime64[ns]")
+    # df_a2["time"].dt.month
+    dataFrameInfo(df_a2)
+    type_counts = df_a2['type'].value_counts()
+    print type_counts
+    cate_counts = df_a2['cate'].value_counts()
+    print cate_counts
 
+    
+    df_a2_click = df_a2[df_a2['type'] == 6]
+    df_a2_click_8 = df_a2_click[df_a2_click['cate']==8]
+    dataFrameInfo(df_a2_click_8)
+    clicks = df_a2_click_8['time'].value_counts().sort_index()
+    datetime_click = clicks.index
+    plt.plot(datetime_click, clicks)
+    
+    df_a2_order = df_a2[df_a2['type'] == 4]
+    df_a2_order_8 = df_a2_order[df_a2_order['cate']==8]
+    dataFrameInfo(df_a2_order_8)
+    orders = df_a2_order_8['time'].value_counts().sort_index()
+    datetime_order = orders.index
+    plt.plot(datetime_order, orders)
+    
+    
+    
+    '''
     # convert to sparse matrix
-    df_a2_order = df_a2[df_a2['type'] == 4].drop(['type'], axis = 1)
-    
-    R_a2_order = to_user_item_matrix(df_a2_order, 'user_id', 'sku_id')
-    
+    R_a2_order = to_user_item_matrix(df_a2_order['user_id'], df_a2_order['cate'])
     C_a2_order = R_a2_order
-    '''C = 1 + a * R ???'''
-
+    
+    
     # MF
     model = model_implicit_data(C_a2_order)
     
@@ -84,14 +113,8 @@ def main():
     
     itemid = 20077
     related = getSimilarItems(model, itemid)
-    
-    # Logistic
+    '''
 
-    '''Add code here'''
-    
-    # BPR
-    
-    '''Add code here'''
 
     
 if __name__ == '__main__':
