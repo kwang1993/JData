@@ -17,14 +17,23 @@ def dataFrameInfo(df):
     print "\ninfo:"
     print df.info()
     print "\ndescribe:"
-    print df.describe()    
+    print df.describe()   
+    print "\nuser number = %d" % len(df['user_id'].unique()) #73299
+    print "\nsku number = %d" % len(df['sku_id'].unique()) #20725
+    type_counts = df['type'].value_counts()
+    print type_counts
+    cate_counts = df['cate'].value_counts()
+    print cate_counts
      
 def loadData(path, fname):
     print "================= Load Data =================="
     print "Loading "+ fname +" ..."
     df = pd.read_csv(path + fname, index_col = False)
+    df = df.drop_duplicates()
+    df['user_id'] = df['user_id'].astype("int64") 
+    df['time'] = df['time'].astype("datetime64[ns]")
+    # df["time"].dt.month
     print "Loading "+ fname +" finished."  
-    dataFrameInfo(df)
     return df
 
 def to_user_item_matrix(users, items): # return csr_matrix
@@ -59,8 +68,19 @@ def getSimilarItems(model, itemid): # find related items
         print i, p
     return related
 
+def dfTypeCate(df, type_no, cate_no):
+    df_type = df[df['type'] == type_no]
+    df_type_cate = df_type[df_type['cate']==cate_no]
+    #dataFrameInfo(df_click_8)
+    counts = df_type_cate['time'].value_counts().sort_index()
+    time_sorted = counts.index
+    plt.xticks(rotation = 45)
+    plt.plot(time_sorted, counts)
+    print "\nuser number = %d" % len(df_type_cate['user_id'].unique())
+    print "\nsku number = %d" % len(df_type_cate['sku_id'].unique()) 
+    return df_type_cate
 
-    
+
 def main():
     dataDir = '../JData/'
     
@@ -72,44 +92,32 @@ def main():
 
     # load data frame
     df_a2 = loadData(dataDir, 'JData_Action_201602.csv')
-    df_a2 = df_a2.drop_duplicates()
-    df_a2['user_id'] = df_a2['user_id'].astype("int64") 
-    df_a2['time'] = df_a2['time'].astype("datetime64[ns]")
-    # df_a2["time"].dt.month
     dataFrameInfo(df_a2)
-    type_counts = df_a2['type'].value_counts()
-    print type_counts
-    cate_counts = df_a2['cate'].value_counts()
-    print cate_counts
+    df_a2_click_8 = dfTypeCate(df_a2, 6, 8)
+    df_a2_order_8 = dfTypeCate(df_a2, 4, 8)
+    df_a3 = loadData(dataDir, 'JData_Action_201603.csv')
+    dataFrameInfo(df_a3)
+    df_a3_click_8 = dfTypeCate(df_a3, 6, 8)
+    df_a3_order_8 = dfTypeCate(df_a3, 4, 8)
+    df_a4 = loadData(dataDir, 'JData_Action_201604.csv') 
+    dataFrameInfo(df_a4)
+    df_a4_click_8 = dfTypeCate(df_a4, 6, 8)
+    df_a4_order_8 = dfTypeCate(df_a4, 4, 8)
+
 
     
-    df_a2_click = df_a2[df_a2['type'] == 6]
-    df_a2_click_8 = df_a2_click[df_a2_click['cate']==8]
-    dataFrameInfo(df_a2_click_8)
-    clicks = df_a2_click_8['time'].value_counts().sort_index()
-    datetime_click = clicks.index
-    plt.plot(datetime_click, clicks)
-    
-    df_a2_order = df_a2[df_a2['type'] == 4]
-    df_a2_order_8 = df_a2_order[df_a2_order['cate']==8]
-    dataFrameInfo(df_a2_order_8)
-    orders = df_a2_order_8['time'].value_counts().sort_index()
-    datetime_order = orders.index
-    plt.plot(datetime_order, orders)
-    
-    
-    
+  
     '''
     # convert to sparse matrix
-    R_a2_order = to_user_item_matrix(df_a2_order['user_id'], df_a2_order['cate'])
-    C_a2_order = R_a2_order
+    R_order = to_user_item_matrix(df_order['user_id'], df_order['cate'])
+    C_order = R_order
     
     
     # MF
-    model = model_implicit_data(C_a2_order)
+    model = model_implicit_data(C_order)
     
     userid = 203632
-    recommendations = getRecommendations(model, C_a2_order, userid)
+    recommendations = getRecommendations(model, C_order, userid)
     
     itemid = 20077
     related = getSimilarItems(model, itemid)
