@@ -16,7 +16,7 @@ def dataFrameInfo(df):
     print df.dtypes
     print "\ninfo:"
     print df.info()
-    print "\nddescribe:"
+    print "\ndescribe:"
     print df.describe()    
      
 def loadData(path, fname):
@@ -72,7 +72,7 @@ def main():
 
     # load data frame
     df_a2 = loadData(dataDir, 'JData_Action_201602.csv')
-    
+    df_a2 = df_a2.drop_duplicates()
     df_a2['user_id'] = df_a2['user_id'].astype("int64") 
     df_a2['time'] = df_a2['time'].astype("datetime64[ns]")
     # df_a2["time"].dt.month
