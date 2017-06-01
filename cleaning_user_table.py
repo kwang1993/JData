@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import normalize 
-path = './'
+path = ''
 users = pd.read_csv(path + 'user_table.csv')
 users = users.set_index('user_id')
 users.head(10)
