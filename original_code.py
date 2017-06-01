@@ -15,7 +15,7 @@ cls = 'svm' #SVM不适用本例
 cls = 'rf' #0.797884680996
 cls = 'knn' #0.782668031389
 resultsfilename = 'results_n' + str(n) + '_cls' + cls +'.csv'
-samplemult = 10
+samplemult = 1s
 
 
 # In[2]:
@@ -385,30 +385,30 @@ df_per_all.to_csv('df_per_all.csv')
 # Since the number of negative samples is 10 times that of positive samples, 
 # We do down-sampling or over-sampling
 
-df_per_all = pd.read_csv('df_per_all.csv', header = 0, index_col = 0)
-df_per_all.head(10)
-df_per_all.loc[df_per_all.buy > 1, ['buy']] = 1
-df_per_all.buy.value_counts()
+#df_per_all = pd.read_csv('df_per_all.csv', header = 0, index_col = 0)
+#df_per_all.head(10)
+#df_per_all.loc[df_per_all.buy > 1, ['buy']] = 1
+#df_per_all.buy.value_counts()
 
 
-
-downSampling = 1 # Choose which sampling method to use
-
-def down_sampling(df):
-    df_buy = df[df['buy'] != 0]
-    df_nobuy = df[df['buy'] == 0].sample(df_buy.shape[0])
-    return pd.concat([df_buy, df_nobuy], ignore_index = True)
-
-def over_sampling(df):
-    df_nobuy = df[df['buy'] == 0] 
-    df_buy = df[df['buy'] != 0].sample(df_nobuy.shape[0], replace=True)
-    return pd.concat([df_buy, df_nobuy], ignore_index = True)   
-
-if downSampling:
-    df_per_all = down_sampling(df_per_all)
-else:
-    df_per_all = over_sampling(df_per_all)
-df_per_all.buy.value_counts()
+#
+#downSampling = 1 # Choose which sampling method to use
+#
+#def down_sampling(df):
+#    df_buy = df[df['buy'] != 0]
+#    df_nobuy = df[df['buy'] == 0].sample(df_buy.shape[0])
+#    return pd.concat([df_buy, df_nobuy], ignore_index = True)
+#
+#def over_sampling(df):
+#    df_nobuy = df[df['buy'] == 0] 
+#    df_buy = df[df['buy'] != 0].sample(df_nobuy.shape[0], replace=True)
+#    return pd.concat([df_buy, df_nobuy], ignore_index = True)   
+#
+#if downSampling:
+#    df_per_all = down_sampling(df_per_all)
+#else:
+#    df_per_all = over_sampling(df_per_all)
+#df_per_all.buy.value_counts()
 # In[ ]:
 
 # 转变成sklearn可以使用的数据库

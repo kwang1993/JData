@@ -5,9 +5,9 @@
 # 2017年5月16日 整理之前的程序
 # 先把用户和产品分别分类后,再和action数据融合
 # 数据窗口
-n = 9
+n = 2
 resultsfilename = 'results_n' + str(n) + '_cls' + cls +'.csv'
-samplemult = 10
+samplemult = 1
 
 
 # In[2]:
