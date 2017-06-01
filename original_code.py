@@ -17,7 +17,7 @@ cls = 'lr' #0.831252132378
 cls = 'svm' #SVM不适用本例
 cls = 'rf' #0.797884680996
 cls = 'knn' #0.782668031389
-resultsfilename = 'results_n' + str(n) + '_cls' + cls +'.csv'
+resultsfilename = outputData + 'results_n' + str(n) + '_cls' + cls +'.csv'
 samplemult = 1s
 
 
@@ -482,7 +482,7 @@ show_all_metrics_for_multiclass(y_test, predictions)
 
 # In[ ]:
 
-df_action_all_nobuy = pd.read_csv('201604nobuyaction.csv', header = 0, index_col = 0)
+df_action_all_nobuy = pd.read_csv(outputData + '201604nobuyaction.csv', header = 0, index_col = 0)
 
 
 # In[ ]:
@@ -516,13 +516,13 @@ print df_user_sku, len(df_user_sku)
 # In[ ]:
 
 # 保存用户数据对
-df_user_sku.to_csv('201604_user_sku.csv')
+df_user_sku.to_csv(outputData + '201604_user_sku.csv')
 
 
 # In[ ]:
 
 # 寻找特征数据
-filename_unknown = '20160416unknown_per.csv'
+filename_unknown = outputData + '20160416unknown_per.csv'
 df_per_unknown = special_predict(n, df_action_all, df_user_sku, dict_user_cat, dict_sku_cat, filename_unknown)
 df_per_unknown.to_csv(filename_unknown)
 
@@ -530,7 +530,7 @@ df_per_unknown.to_csv(filename_unknown)
 # In[ ]:
 
 # -------进行数据预测--------
-df_user_sku = pd.read_csv('201604_user_sku.csv', header = 0, index_col = 0)
+df_user_sku = pd.read_csv(outputData + '201604_user_sku.csv', header = 0, index_col = 0)
 df_per_unknown = pd.read_csv(filename_unknown, header = 0, index_col = 0)
 
 

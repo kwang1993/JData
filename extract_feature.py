@@ -30,10 +30,10 @@ def special_predict(n, df_action_all, df_action_special, dict_user_cat, dict_sku
     # df_action_special变为array,加快索引效率
     array_user_id = np.array(df_action_special['user_id'])
     array_sku_id = np.array(df_action_special['sku_id'])
-    array_time = np.array(df_action_special['time'])
-    time = '2016-04-16 00:00:00'
+#    array_time = np.array(df_action_special['time'])
+    time = '2016-04-11 00:00:00'
     # 时间前移10天
-    time_s_string = '2016-04-06 00:00:00'
+    time_s_string = '2016-04-09 00:00:00'
     df_action_all = df_action_all[(df_action_all['time'] > time_s_string) & (df_action_all['time'] <= time)]
     # 建立特征值DataFrame
     df_per = pd.DataFrame(columns=('browser', 'addchar', 'delchar', 'buy', 'fav', 'click', 'user_cat', 'sku_cat'))
@@ -64,7 +64,6 @@ def special_predict(n, df_action_all, df_action_special, dict_user_cat, dict_sku
         # 写入一行数据特征值
         df_per.loc[i]={'user_cat':user_cat,'sku_cat':sku_cat,'browser':df_action_type_counts[1],'addchar':df_action_type_counts[2],'delchar':df_action_type_counts[3],'buy':df_action_type_counts[4],'fav':df_action_type_counts[5],'click':df_action_type_counts[6]}
     return df_per
-
 
 # In[3]:
 
@@ -358,4 +357,61 @@ df_per_all.to_csv(outputData + 'df_per_all.csv')
 
 
 
+# In[ ]:
+import pickle
+def save_obj(obj, name ):
+    with open(outputData + name + '.pkl', 'wb') as f:
+        pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
 
+def load_obj(name):
+    with open(outputData + name + '.pkl', 'rb') as f:
+        return pickle.load(f)
+    
+save_obj(dict_user_cat, 'dict_user_cat')
+save_obj(dict_sku_cat, 'dict_sku_cat')
+
+# In[ ]:
+
+df_action_all_nobuy = pd.read_csv(outputData + '201604nobuyaction.csv', header = 0, index_col = 0)
+
+
+# In[ ]:
+
+# 提取2016-04-16到2016-04-20用户行为
+# 设置总数据集合
+df_action_all = df_action_all_nobuy
+print len(df_action_all)
+# 筛选出预测用户和预测产品的相关数据
+df_action_all = df_action_all[(df_action_all['user_id'].isin(dict_user_cat.keys())) & (df_action_all['sku_id'].isin(dict_sku_cat.keys()))]
+print df_action_all.head()
+print len(df_action_all)
+# 筛选不筛选是一样一样的
+
+
+# In[ ]:
+
+# 使用用户产品对作为索引
+df_action_all['user_sku'] = df_action_all['user_id']*100000000 + df_action_all['sku_id']
+df_user_sku = df_action_all.drop_duplicates(['user_sku'])
+
+
+# In[ ]:
+
+# 补全数据，形成预测对象数据，所有的4月份用户产品对
+df_user_sku['time'] = '2016-04-11 00:00:00'
+df_user_sku['type'] = 0
+print df_user_sku, len(df_user_sku)
+
+
+# In[ ]:
+
+# 保存用户数据对
+df_user_sku.to_csv(outputData + '201604_user_sku.csv')
+
+
+# In[ ]:
+
+# 寻找特征数据
+filename_unknown = outputData + '20160416unknown_per.csv'
+df_per_unknown = special_predict(n, df_action_all, df_user_sku, dict_user_cat, dict_sku_cat, filename_unknown)
+df_per_unknown.to_csv(filename_unknown)

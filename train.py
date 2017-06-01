@@ -1,16 +1,8 @@
 # coding: utf-8
 
-n = 9
+n = 2
 test_size= .2
-cls = 'GBDT' #0.773114977823
-#cls = 'bayes' #0.655407710679
-#cls = 'GBDT' #0.841282838622
-#cls = 'lr' #0.831252132378
-#cls = 'svm' #SVM is not suitable here
-#cls = 'rf' #0.797884680996
-#cls = 'knn' #0.782668031389
-resultsfilename = 'results_n' + str(n) + '_cls' + cls +'.csv'
-samplemult = 10
+samplemult = 1
 
 # -*- coding = utf-8 -*-
 import pandas as pd
@@ -25,6 +17,16 @@ from sklearn import linear_model
 from sklearn import svm 
 from sklearn import neighbors
 
+inputData = '../JData/'
+outputData = 'data/'
+resultData = 'results/'
+cls = 'GBDT' #0.773114977823
+#cls = 'bayes' #0.655407710679
+#cls = 'GBDT' #0.841282838622
+#cls = 'lr' #0.831252132378
+#cls = 'svm' #SVM is not suitable here
+#cls = 'rf' #0.797884680996
+#cls = 'knn' #0.782668031389
 def performance(y_true, y_pred):
     """
     Calculates the performance metric based on the agreement between the 
@@ -40,8 +42,7 @@ def performance(y_true, y_pred):
         metric -- ndarray, performance measure
                   options: 'accuracy', 'f1-score', 'auroc', 'precision',
                            'sensitivity', 'specificity' 
-    """
-    
+    """   
     m = metrics.confusion_matrix(y_true, y_pred)
     #print m
     metric = np.zeros(6)
@@ -57,7 +58,7 @@ def performance(y_true, y_pred):
     TN = m[1, 1]
     FP = m[0, 1]
     metric[5] = float(TN) / float(FP + TN)
-
+    
     return metric
 
 def cv_performance(clf, X, y, kf):
@@ -102,7 +103,7 @@ def test_performance(clf, X_train, y_train, X_test, y_test, kf):
 # -----training part------
 
 # read the stored training data
-df_per_all = pd.read_csv('data/df_per_all.csv', header = 0, index_col = 0)
+df_per_all = pd.read_csv(outputData + 'df_per_all.csv', header = 0, index_col = 0)
 df_buy_counts = df_per_all['buy'].value_counts()
 
 for k in range(0, 5):
@@ -128,40 +129,35 @@ for k in range(0, 2):
 X = np.array(df_per_all.drop('buy',axis =1))
 y = np.array(df_per_all['buy'])
 
-# split the train and test data
-from sklearn.model_selection import StratifiedShuffleSplit
-sss = StratifiedShuffleSplit(n_splits=1, test_size=test_size, random_state=0)
-for train_index, test_index in sss.split(X, y):
-    X_train, X_test = X[train_index], X[test_index]
-    y_train, y_test = y[train_index], y[test_index]
+## split the train and test data
+#sss = StratifiedShuffleSplit(n_splits=1, test_size=test_size, random_state=0)
+#for train_index, test_index in sss.split(X, y):
+#    X_train, X_test = X[train_index], X[test_index]
+#    y_train, y_test = y[train_index], y[test_index]
 
 # cv for train data
-skf = StratifiedKFold(y_train, n_folds=5)
+#skf = StratifiedKFold(y_train, n_folds=5)
+skf = StratifiedKFold(y, n_folds=5)
+
 if cls == 'tree':
-  from sklearn import tree
   clf = tree.DecisionTreeClassifier()
 if cls == 'bayes':
-  from sklearn import naive_bayes
   clf = naive_bayes.GaussianNB()
 if cls == 'GBDT':
-  from sklearn import ensemble
   clf = ensemble.GradientBoostingClassifier()
 if cls == 'lr':
-  from sklearn import linear_model 
   clf = linear_model.LogisticRegression()
 if cls == 'svm':  
-  from sklearn import svm 
   clf = svm.SVC(kernel = 'linear')
 if cls == 'rf':
-  from sklearn import ensemble
   clf = ensemble.randomForestClassifer(max_depth = 5)
 if cls == 'knn':  
-  from sklearn import neighbors
   clf = neighbors.KNeighborsClassifier()
 
 print "cv Performance for " + cls
 metric_list = ["accuracy", "f1_score", "auroc", "precision", "sensitivity", "specificity"]
-metric = cv_performance(clf, X_train, y_train, skf)
+#metric = cv_performance(clf, X_train, y_train, skf)
+metric = cv_performance(clf, X, y, skf)
 print metric_list
 print metric
 
@@ -172,3 +168,87 @@ metric = test_performance(clf, X_train, y_train, X_test, y_test, skf)
 print metric_list
 print metric
 '''
+
+
+
+
+
+# In[ ]:
+
+# -------以下是预测数据准备------
+
+# In[6]:
+
+import pickle
+def save_obj(obj, name ):
+    with open(outputData + name + '.pkl', 'wb') as f:
+        pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
+
+def load_obj(name):
+    with open(outputData + name + '.pkl', 'rb') as f:
+        return pickle.load(f)
+    
+dict_user_cat = load_obj('dict_user_cat')
+dict_sku_cat = load_obj('dict_sku_cat')
+
+
+
+# In[ ]:
+
+# -------进行数据预测--------
+filename_unknown = outputData + '20160416unknown_per.csv'
+df_user_sku = pd.read_csv(outputData + '201604_user_sku.csv', header = 0, index_col = 0)
+df_per_unknown = pd.read_csv(filename_unknown, header = 0, index_col = 0)
+
+
+# In[ ]:
+
+# 使用之前的模型进行数据预测
+X_unknown = np.array(df_per_unknown.drop('buy',axis =1))
+print X_unknown
+predictions = clf.predict(X_unknown)
+pre_prob = clf.predict_proba(X_unknown)
+print predictions,pre_prob
+
+
+# In[ ]:
+
+# 预测结果和用户产品数据融合，以便接下来处理
+df_user_sku['buy'] = predictions
+df_user_sku['buy_prob'] = pre_prob[:,1]
+print df_user_sku
+
+
+# In[ ]:
+
+# 筛选出购买结果数据
+df_buy = df_user_sku[df_user_sku['buy'] == 1]
+print df_buy
+
+
+# In[ ]:
+
+# 筛选最佳结果 函数
+def best_sku(df):
+  return (df.sort(['buy_prob'], ascending = False)).iloc[0,:]
+
+
+# In[ ]:
+
+# 分类统计选取最佳结果
+grouped = df_buy.groupby(['user_id'])
+results = grouped.apply(best_sku)
+
+
+# In[ ]:
+
+# 数据转换函数
+def int_to_str(id):
+  return str(int(id))
+
+# 形成数据结果
+results = results.loc[:,['user_id','sku_id']]
+results['user_id'] = results['user_id'].apply(int_to_str)
+
+resultsfilename = 'results_n' + str(n) + '_cls' + cls +'.csv'
+results.to_csv(resultsfilename, index=False)
