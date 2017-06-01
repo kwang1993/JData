@@ -6,7 +6,7 @@
 # 先把用户和产品分别分类后,再和action数据融合
 # 数据窗口
 n = 2
-resultsfilename = 'results_n' + str(n) + '_cls' + cls +'.csv'
+
 samplemult = 1
 
 
@@ -141,7 +141,7 @@ import numpy as np
 # 文件列表
 ACTION_201602_FILE = "../JData/JData_Action_201602.csv"
 ACTION_201603_FILE = "../JData/JData_Action_201603.csv"
-ACTION_201604_FILE = "../JData/JData_Action_201604.csv"
+ACTION_201604_FILE = "../JData/New_JData_Action_201604.csv"
 COMMENT_FILE = "../JData/JData_Comment.csv"
 PRODUCT_FILE = "../JData/JData_Product.csv"
 USER_FILE = "../JData/JData_User.csv"
@@ -242,8 +242,6 @@ dict_user_cat = df_user_cat.set_index('user_id')['user_cat'].to_dict()
 df_sku_cat = df_pb.loc[:,['sku_id','sku_cat']]
 df_sku_cat = df_sku_cat.fillna('00000')
 dict_sku_cat = df_sku_cat.set_index('sku_id')['sku_cat'].to_dict()
-n=10
-import numpy as np
 
 
 # In[11]:
@@ -291,7 +289,7 @@ df_action_all = df_action_201602
 # 提取有购买行为的用户在购买行为发生前n天的特征
 df_action_buy = df_action_all[df_action_all['type'] == 4]
 filename_buy = 'data/201602buy_per.csv'
-get_ipython().magic(u'time df_per, df_action_buy_index = special_per(n, df_action_all, df_action_buy, dict_user_cat, dict_sku_cat, filename_buy)')
+df_per, df_action_buy_index = special_per(n, df_action_all, df_action_buy, dict_user_cat, dict_sku_cat, filename_buy)
 # 提取无购买行为的用户在购买行为发生前n天的特征
 df_action_all_nobuy = df_action_all.drop(df_action_buy_index)
 nobuy_sample_n = len(df_action_buy)
