@@ -18,6 +18,12 @@ import numpy as np
 from sklearn.model_selection import StratifiedShuffleSplit
 from sklearn.cross_validation import StratifiedKFold
 from sklearn import metrics
+from sklearn import tree
+from sklearn import naive_bayes
+from sklearn import ensemble
+from sklearn import linear_model 
+from sklearn import svm 
+from sklearn import neighbors
 
 def performance(y_true, y_pred):
     """
@@ -132,14 +138,26 @@ for train_index, test_index in sss.split(X, y):
 # cv for train data
 skf = StratifiedKFold(y_train, n_folds=5)
 if cls == 'tree':
-    from sklearn import tree
-    clf = tree.DecisionTreeClassifier()
+  from sklearn import tree
+  clf = tree.DecisionTreeClassifier()
 if cls == 'bayes':
-    from sklearn import naive_bayes
-    clf = naive_bayes.GaussianNB()
+  from sklearn import naive_bayes
+  clf = naive_bayes.GaussianNB()
 if cls == 'GBDT':
-    from sklearn import ensemble
-    clf = ensemble.GradientBoostingClassifier()
+  from sklearn import ensemble
+  clf = ensemble.GradientBoostingClassifier()
+if cls == 'lr':
+  from sklearn import linear_model 
+  clf = linear_model.LogisticRegression()
+if cls == 'svm':  
+  from sklearn import svm 
+  clf = svm.SVC(kernel = 'linear')
+if cls == 'rf':
+  from sklearn import ensemble
+  clf = ensemble.randomForestClassifer(max_depth = 5)
+if cls == 'knn':  
+  from sklearn import neighbors
+  clf = neighbors.KNeighborsClassifier()
 
 print "cv Performance for " + cls
 metric_list = ["accuracy", "f1_score", "auroc", "precision", "sensitivity", "specificity"]

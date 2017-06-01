@@ -293,3 +293,7 @@ results = grouped.apply(best_sku)
 # 数据转换函数
 def int_to_str(id):
     return str(int(id))
+	
+# 形成数据结果
+results = results.loc[:,['user_id','sku_id']]
+results['user_id'] = results['user_id'].apply(int_to_str)
