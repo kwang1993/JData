@@ -5,6 +5,9 @@
 # 2017年5月16日 整理之前的程序
 # 先把用户和产品分别分类后,再和action数据融合
 # 数据窗口
+
+inputData = '../JData/'
+outputData = 'data/'
 n = 10 # 天数
 test_size=0.3
 cls = 'tree' #0.773114977823 
@@ -149,16 +152,16 @@ import pandas as pd
 import numpy as np
 
 # 文件列表
-ACTION_201602_FILE = "JData/JData_Action_201602.csv"
-ACTION_201603_FILE = "JData/JData_Action_201603.csv"
-ACTION_201604_FILE = "JData/JData_Action_201604.csv"
-COMMENT_FILE = "JData/JData_Comment.csv"
-PRODUCT_FILE = "JData/JData_Product.csv"
-USER_FILE = "JData/JData_User.csv"
+ACTION_201602_FILE = inputData + "JData_Action_201602.csv"
+ACTION_201603_FILE = inputData + "JData_Action_201603.csv"
+ACTION_201604_FILE = inputData + "JData_Action_201604.csv"
+COMMENT_FILE = inputData + "JData_Comment.csv"
+PRODUCT_FILE = inputData + "JData_Product.csv"
+USER_FILE = inputData + "JData_User.csv"
 
-USER_TABLE_FILE = "JData/JData_Table_User.csv"
-PRODUCT_TABLE_FILE = "JData/JData_Table_Product.csv"
-BEHAVIOR_TABLE_FILE = "JData/JData_Table_Behavior.csv"
+USER_TABLE_FILE = inputData + "JData_Table_User.csv"
+PRODUCT_TABLE_FILE = inputData + "JData_Table_Product.csv"
+BEHAVIOR_TABLE_FILE = inputData + "JData_Table_Behavior.csv"
 DEMO = "demo.csv"
 
 
@@ -308,13 +311,13 @@ print len(df_action_201604)
 df_action_all = df_action_201602
 # 提取有购买行为的用户在购买行为发生前n天的特征
 df_action_buy = df_action_all[df_action_all['type'] == 4]
-filename_buy = '201602buy_per.csv'
+filename_buy = outputData + '201602buy_per.csv'
 df_per, df_action_buy_index = special_per(n, df_action_all, df_action_buy, dict_user_cat, dict_sku_cat, filename_buy)
 # 提取无购买行为的用户在购买行为发生前n天的特征
 df_action_all_nobuy = df_action_all.drop(df_action_buy_index)
 nobuy_sample_n = len(df_action_buy)
 df_action_nobuy = df_action_all.sample(nobuy_sample_n * samplemult)
-filename_nobuy = '201602nobuy_per.csv'
+filename_nobuy = outputData + '201602nobuy_per.csv'
 df_per, df_action_nobuy_index = special_per(n, df_action_all_nobuy, df_action_nobuy, dict_user_cat, dict_sku_cat, filename_nobuy)
 
 
@@ -324,13 +327,13 @@ df_per, df_action_nobuy_index = special_per(n, df_action_all_nobuy, df_action_no
 df_action_all = df_action_201603
 # 提取有购买行为的用户在购买行为发生前n天的特征
 df_action_buy = df_action_all[df_action_all['type'] == 4]
-filename_buy = '201603buy_per.csv'
+filename_buy = outputData + '201603buy_per.csv'
 df_per, df_action_buy_index = special_per(n, df_action_all, df_action_buy, dict_user_cat, dict_sku_cat, filename_buy)
 # 提取无购买行为的用户在购买行为发生前n天的特征
 df_action_all_nobuy = df_action_all.drop(df_action_buy_index)
 nobuy_sample_n = len(df_action_buy)
 df_action_nobuy = df_action_all.sample(nobuy_sample_n * samplemult)
-filename_nobuy = '201603nobuy_per.csv'
+filename_nobuy = outputData + '201603nobuy_per.csv'
 df_per, df_action_nobuy_index = special_per(n, df_action_all_nobuy, df_action_nobuy, dict_user_cat, dict_sku_cat, filename_nobuy)
 
 
@@ -340,13 +343,13 @@ df_per, df_action_nobuy_index = special_per(n, df_action_all_nobuy, df_action_no
 df_action_all = df_action_201604
 # 提取有购买行为的用户在购买行为发生前n天的特征
 df_action_buy = df_action_all[df_action_all['type'] == 4]
-filename_buy = '201604buy_per.csv'
+filename_buy = outputData + '201604buy_per.csv'
 df_per, df_action_buy_index = special_per(n, df_action_all, df_action_buy, dict_user_cat, dict_sku_cat, filename_buy)
 # 提取无购买行为的用户在购买行为发生前n天的特征
 df_action_all_nobuy = df_action_all.drop(df_action_buy_index)
 nobuy_sample_n = len(df_action_buy)
 df_action_nobuy = df_action_all.sample(nobuy_sample_n * samplemult)
-filename_nobuy = '201604nobuy_per.csv'
+filename_nobuy = outputData + '201604nobuy_per.csv'
 df_per_nobuy, df_action_nobuy_index = special_per(n, df_action_all_nobuy, df_action_nobuy, dict_user_cat, dict_sku_cat, filename_nobuy)
 
 
@@ -354,9 +357,9 @@ df_per_nobuy, df_action_nobuy_index = special_per(n, df_action_all_nobuy, df_act
 
 # 保存04月份的未购买数据，这是用于预测的基础数据库
 action_nobuy_index = pd.DataFrame(np.array(df_action_nobuy_index))
-action_nobuy_index.to_csv('201604nobuyindex.csv')
+action_nobuy_index.to_csv(outputData + '201604nobuyindex.csv')
 df_action_all_nobuy = df_action_all_nobuy.drop(df_action_nobuy_index)
-df_action_all_nobuy.to_csv('201604nobuyaction.csv')
+df_action_all_nobuy.to_csv(outputData + '201604nobuyaction.csv')
 print len(df_action_all_nobuy)
 
 
@@ -374,11 +377,11 @@ print len(df_action_all_nobuy)
 # In[ ]:
 
 # 读取所有已保存的数据
-filename_all = ['201602nobuy_per.csv', '201603buy_per.csv', '201603nobuy_per.csv', '201604buy_per.csv', '201604nobuy_per.csv']
-df_per_all = pd.read_csv('201602buy_per.csv', header = 0, index_col = 0)
+filename_all = [outputData + '201602nobuy_per.csv',outputData +  '201603buy_per.csv', outputData + '201603nobuy_per.csv', outputData + '201604buy_per.csv', outputData + '201604nobuy_per.csv']
+df_per_all = pd.read_csv(outputData + '201602buy_per.csv', header = 0, index_col = 0)
 for item in filename_all:
   df_per_all = pd.concat([df_per_all, pd.read_csv(item, header = 0, index_col = 0)])
-df_per_all.to_csv('df_per_all.csv')
+df_per_all.to_csv(outputData + 'df_per_all.csv')
 
 # In[ ]:
 
