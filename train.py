@@ -20,13 +20,7 @@ from sklearn import neighbors
 inputData = '../JData/'
 outputData = 'data/'
 resultData = 'results/'
-cls = 'GBDT' #0.773114977823
-#cls = 'bayes' #0.655407710679
-#cls = 'GBDT' #0.841282838622
-#cls = 'lr' #0.831252132378
-#cls = 'svm' #SVM is not suitable here
-#cls = 'rf' #0.797884680996
-#cls = 'knn' #0.782668031389
+
 def performance(y_true, y_pred):
     """
     Calculates the performance metric based on the agreement between the 
@@ -139,6 +133,13 @@ y = np.array(df_per_all['buy'])
 #skf = StratifiedKFold(y_train, n_folds=5)
 skf = StratifiedKFold(y, n_folds=5)
 
+cls = 'GBDT' #0.773114977823
+#cls = 'bayes' #0.655407710679
+#cls = 'GBDT' #0.841282838622
+#cls = 'lr' #0.831252132378
+#cls = 'svm' #SVM is not suitable here
+#cls = 'rf' #0.797884680996
+#cls = 'knn' #0.782668031389
 if cls == 'tree':
   clf = tree.DecisionTreeClassifier()
 if cls == 'bayes':
