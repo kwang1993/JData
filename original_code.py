@@ -18,7 +18,7 @@ cls = 'svm' #SVM不适用本例
 cls = 'rf' #0.797884680996
 cls = 'knn' #0.782668031389
 resultsfilename = outputData + 'results_n' + str(n) + '_cls' + cls +'.csv'
-samplemult = 1s
+samplemult = 1
 
 
 # In[2]:
