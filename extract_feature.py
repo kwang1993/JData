@@ -149,7 +149,7 @@ USER_FILE = inputData + "JData_User.csv"
 USER_TABLE_FILE = inputData + "JData_Table_User.csv"
 PRODUCT_TABLE_FILE = inputData + "JData_Table_Product.csv"
 BEHAVIOR_TABLE_FILE = inputData + "JData_Table_Behavior.csv"
-DEMO = "demo.csv"
+
 
 
 # In[6]:
