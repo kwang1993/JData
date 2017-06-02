@@ -240,9 +240,9 @@ df_pb['prod_cat'] = df_pb['a1'].map(int_to_string) + df_pb['a2'].map(int_to_stri
 df_user_cat = df1.loc[:,['user_id','user_cat']]
 dict_user_cat = df_user_cat.set_index('user_id')['user_cat'].to_dict()
 # 产品与分类之间建立词典
-df_sku_cat = df_pb.loc[:,['sku_id','sku_cat']]
+df_sku_cat = df_pb.loc[:,['sku_id','prod_cat']]
 df_sku_cat = df_sku_cat.fillna('00000')
-dict_sku_cat = df_sku_cat.set_index('sku_id')['sku_cat'].to_dict()
+dict_sku_cat = df_sku_cat.set_index('sku_id')['prod_cat'].to_dict()
 
 
 # In[11]:
