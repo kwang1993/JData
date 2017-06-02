@@ -253,3 +253,10 @@ results['user_id'] = results['user_id'].apply(int_to_str)
 
 resultsfilename = 'results_n' + str(n) + '_cls' + cls +'.csv'
 results.to_csv(resultsfilename, index=False)
+
+
+
+# In[ ]:
+    
+# evaluation
+ground_truth = pd.read_csv(outputData + 'ground_truth.csv')
