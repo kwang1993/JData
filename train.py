@@ -254,6 +254,8 @@ print performance(df_user_sku['ground_truth'], df_user_sku['buy'])
 print metrics.classification_report(df_user_sku['ground_truth'], df_user_sku['buy'])
 print metrics.confusion_matrix(df_user_sku['ground_truth'], df_user_sku['buy'])
 '''
+Official evaluation:
+    
 F11 = 6*Recall*Precision/(5*Recall+Precision), F12 = 5*Recall*Precision/(2*Recall+3*Precision)
 Score = 0.4*F11 + 0.6*F12
 '''
@@ -262,10 +264,10 @@ Recall = metrics.recall_score(df_user_sku['ground_truth'], df_user_sku['buy'])
 F11 = 6*Recall*Precision/(5*Recall+Precision)
 F12 = 5*Recall*Precision/(2*Recall+3*Precision)
 Score = 0.4*F11 + 0.6*F12
-print Score
+print Score 
 
 
-        
+# what about the accuracy of buy/nobuy prediction
 buy_or_nobuy = pd.DataFrame({'user_id': df_user_sku['user_id'].unique()})
 buy_or_nobuy['buy'] = buy_or_nobuy['user_id'].isin(df_user_sku.user_id[df_user_sku['buy'] == 1])
 buy_or_nobuy['ground_truth'] = buy_or_nobuy['user_id'].isin(ground_truth['user_id'])
