@@ -173,7 +173,9 @@ for cls in ['tree', 'bayes', 'GBDT', 'lr', 'rf', 'knn']:
         model_name = cls
 print model_name # GBDT
 clf = model
-
+clf.fit(X, y)
+#print list(df_per_all.drop('buy',axis =1).columns)
+#print clf.feature_importances_ 
 
 # -----testing part------
 
