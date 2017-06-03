@@ -262,7 +262,8 @@ results.to_csv(resultsfilename, index=False)
 # In[ ]:
     
 # evaluation
-ground_truth = pd.read_csv(outputData + 'ground_truth.csv', index_col = 0)
+ground_truth_file = 'ground_truth.csv'
+ground_truth = pd.read_csv(outputData + ground_truth_file, index_col = 0)
 ground_truth['user_sku'] = ground_truth['user_id']*100000000 + ground_truth['sku_id']
 df_user_sku['user_sku'].shape
 ground_truth['user_sku'].shape
