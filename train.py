@@ -1,10 +1,5 @@
 # coding: utf-8
 
-n = 2
-test_size= .2
-samplemult = 1
-
-# -*- coding = utf-8 -*-
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import StratifiedShuffleSplit
@@ -19,6 +14,11 @@ from sklearn import neighbors
 
 inputData = '../JData/'
 outputData = 'data/'
+
+
+n = 2
+test_size= .2
+samplemult = 1
 
 
 def performance(y_true, y_pred):
@@ -175,14 +175,9 @@ print model_name # GBDT
 clf = model
 
 
+# -----testing part------
 
-
-# In[ ]:
-
-# -------以下是预测数据准备------
-
-# In[6]:
-
+# read dictionaries
 import pickle
 def save_obj(obj, name ):
     with open(outputData + name + '.pkl', 'wb') as f:
@@ -197,9 +192,7 @@ dict_sku_cat = load_obj('dict_sku_cat')
 
 
 
-# In[ ]:
-
-# -------进行数据预测--------
+# -------read features and user_sku pairs to predict -------
 filename_unknown = outputData + '20160416unknown_per.csv'
 df_user_sku = pd.read_csv(outputData + '201604_user_sku.csv', header = 0, index_col = 0)
 df_per_unknown = pd.read_csv(filename_unknown, header = 0, index_col = 0)
@@ -207,7 +200,7 @@ df_per_unknown = pd.read_csv(filename_unknown, header = 0, index_col = 0)
 
 # In[ ]:
 
-# 使用之前的模型进行数据预测
+# predict buy action
 X_unknown = np.array(df_per_unknown.drop('buy',axis =1))
 print X_unknown
 predictions = clf.predict(X_unknown)
@@ -217,7 +210,7 @@ print predictions,pre_prob
 
 # In[ ]:
 
-# 预测结果和用户产品数据融合，以便接下来处理
+# merge predictions into dataframe
 df_user_sku['buy'] = predictions
 df_user_sku['buy_prob'] = pre_prob[:,1]
 print df_user_sku
@@ -225,32 +218,31 @@ print df_user_sku
 
 # In[ ]:
 
-# 筛选出购买结果数据
+# filter out purchases
 df_buy = df_user_sku[df_user_sku['buy'] == 1]
 print df_buy
 
 
 # In[ ]:
 
-# 筛选最佳结果 函数
+# get best sku for each user
 def best_sku(df):
   return (df.sort(['buy_prob'], ascending = False)).iloc[0,:]
 
 
 # In[ ]:
 
-# 分类统计选取最佳结果
+# sku group by each user
 grouped = df_buy.groupby(['user_id'])
 results = grouped.apply(best_sku)
 
 
 # In[ ]:
 
-# 数据转换函数
 def int_to_str(id):
   return str(int(id))
 
-# 形成数据结果
+# results
 results = results.loc[:,['user_id','sku_id']]
 results['user_id'] = results['user_id'].apply(int_to_str)
 
@@ -264,15 +256,15 @@ results.to_csv(resultsfilename, index=False)
 # evaluation
 ground_truth_file = 'ground_truth.csv'
 ground_truth = pd.read_csv(outputData + ground_truth_file, index_col = 0)
-ground_truth['user_sku'] = ground_truth['user_id']*100000000 + ground_truth['sku_id']
-df_user_sku['user_sku'].shape
-ground_truth['user_sku'].shape
+#ground_truth['user_sku'] = ground_truth['user_id']*100000000 + ground_truth['sku_id']
+#df_user_sku['user_sku'].shape
+#ground_truth['user_sku'].shape
         
 buy_or_nobuy = pd.DataFrame({'user_id': df_user_sku['user_id'].unique()})
 buy_or_nobuy['buy'] = buy_or_nobuy['user_id'].isin(df_user_sku.user_id[df_user_sku['buy'] == 1])
 buy_or_nobuy['ground_truth'] = buy_or_nobuy['user_id'].isin(ground_truth['user_id'])
-buy_or_nobuy['buy'].value_counts()
-buy_or_nobuy['ground_truth'].value_counts()    
+#buy_or_nobuy['buy'].value_counts()
+#buy_or_nobuy['ground_truth'].value_counts()    
 buy_or_nobuy = buy_or_nobuy.set_index('user_id') 
 buy_or_nobuy.to_csv(outputData + 'evalutation_n' + str(n) + '_cls' + cls +'.csv')  
 

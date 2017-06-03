@@ -9,11 +9,13 @@ users.shape
 #users[(users['click_num'] < users['buy_num']) & (users['browse_num'] < users['buy_num'])]
 # empty
 
+# filter out users who browse and click a lot but don't buy anything
 crawler_user = users[(users['buy_num'] == 0) & ((users['browse_num'] > 500) | (users['click_num'] > 500) | (users['addcart_num'] > 100))]
 crawler_user.head(10)
 crawler_user.shape
 crawler_user.to_csv(path + 'crawler_users.csv')
 
+# other users
 filtered_users = users.drop(crawler_user.index)
 filtered_users.to_csv(path + "filtered_users.csv")
 

@@ -1,44 +1,43 @@
 # coding: utf-8
-
 # In[16]:
+'''
+The idea is to abstract users and items into groups, and then extract features from action history data.
+'''
+import pandas as pd
+import numpy as np
 
-# 2017年5月16日 整理之前的程序
-# 先把用户和产品分别分类后,再和action数据融合
-# 数据窗口
-
+# parameters
 
 inputData = '../JData/'
 outputData = 'data/'
 
-n = 2
-samplemult = 1
+n = 2 # how many days before purchase
+samplemult = 1 # ratio of nobuy samples over buy samples 
 # In[2]:
 
-# 函数设定区
-# 提取购买行为发生前n天用户行为的特征，用户和产品抽象为类别
-#
+# for each special action, extract features of n days from all the actions, users and items are abstracted into groups
+# This function is for test set
 def special_predict(n, df_action_all, df_action_special, dict_user_cat, dict_sku_cat, filename):
     '''
-    输入：
-    n：产生特定行为数据之前n天的数据组成特征（特定用户针对特定产品）
-    df_action_all：全部行为数据
-    df_action_special:特定行为数据
-    输出：
-    df_per:输出的数据组成特征
-    df_action_special_index:构成以上数据组成特征的原始数据索引
+    input：
+    n：days before purchase
+    df_action_all：action history
+    df_action_special: purchase action 
+    output:
+    df_per: features per special action
+    df_action_special_index: original indexes of special actions
     '''
-    # df_action_special变为array,加快索引效率
+
     array_user_id = np.array(df_action_special['user_id'])
     array_sku_id = np.array(df_action_special['sku_id'])
-#    array_time = np.array(df_action_special['time'])
+
     time = '2016-04-11 00:00:00'
-    # 时间前移10天
     time_s_string = '2016-04-09 00:00:00'
     df_action_all = df_action_all[(df_action_all['time'] > time_s_string) & (df_action_all['time'] <= time)]
-    # 建立特征值DataFrame
+
     df_per = pd.DataFrame(columns=('browser', 'addchar', 'delchar', 'buy', 'fav', 'click', 'user_cat', 'sku_cat'))
 
-    # 循环建立各个specail行为前n天的特征值
+    # for each special action, build features 
     for i in range(len(df_action_special)):
         if i%10000 == 0:
             print i
@@ -49,48 +48,43 @@ def special_predict(n, df_action_all, df_action_special, dict_user_cat, dict_sku
         # print sku,df_pb[df_pb['sku_id'] == sku]
         sku_cat = dict_sku_cat[sku]
         user_sku = user * 100000000 + sku
-        # 筛选购买动作前n天的数据
+        # filter data
         df_action_p = df_action_all[df_action_all['user_sku'] == user_sku]
         # print len(df_action_nobuy)
-        # 提取特征值,各项动作的次数
         # print len(df_action_nobuy)
         df_action_type_counts = df_action_p['type'].value_counts()
-        # 处理异常数据\缺失值
+        # fillna
         for k in range(1,7):
             try:
                 df_action_type_counts[k]
             except:
                 df_action_type_counts[k] = 0
-        # 写入一行数据特征值
+        # write a row of features
         df_per.loc[i]={'user_cat':user_cat,'sku_cat':sku_cat,'browser':df_action_type_counts[1],'addchar':df_action_type_counts[2],'delchar':df_action_type_counts[3],'buy':df_action_type_counts[4],'fav':df_action_type_counts[5],'click':df_action_type_counts[6]}
     return df_per
 
 # In[3]:
 
-# 函数设定区
-# 提取购买行为发生前n天用户行为的特征，用户和产品抽象为类别
-#
+# for each special action, extract features of n days from all the actions, users and items are abstracted into groups
+# This function is for training set
 def special_per(n, df_action_all, df_action_special, dict_user_cat, dict_sku_cat, filename):
     '''
-    输入：
-    n：产生特定行为数据之前n天的数据组成特征（特定用户针对特定产品）
-    df_action_all：全部行为数据
-    df_action_special:特定行为数据
-    输出：
-    df_per:输出的数据组成特征
-    df_action_special_index:构成以上数据组成特征的原始数据索引
+    input：
+    n：days before purchase
+    df_action_all：action history
+    df_action_special: purchase action 
+    output:
+    df_per: features per special action
+    df_action_special_index: original indexes of special actions
     '''
-    import pandas as pd
-    import numpy as np
-    # df_action_special变为array,加快索引效率
+
     array_user_id = np.array(df_action_special['user_id'])
     array_sku_id = np.array(df_action_special['sku_id'])
     array_time = np.array(df_action_special['time'])
 
-    # 建立特征值DataFrame
     df_per = pd.DataFrame(columns=('browser', 'addchar', 'delchar', 'buy', 'fav', 'click', 'user_cat', 'sku_cat'))
 
-    # 循环建立各个specail行为前n天的特征值
+    # for each special action, build features 
     for i in range(len(df_action_special)):
         print i
         user = array_user_id[i]
@@ -100,27 +94,25 @@ def special_per(n, df_action_all, df_action_special, dict_user_cat, dict_sku_cat
         # print sku,df_pb[df_pb['sku_id'] == sku]
         sku_cat = dict_sku_cat[sku]
         time = array_time[i]
-        # 时间前移10天
         time_s_datetime = pd.datetime.strptime(time , '%Y-%m-%d %H:%M:%S') - pd.Timedelta(days = n)
         time_s_string = pd.datetime.strftime(time_s_datetime , '%Y-%m-%d %H:%M:%S')
-        # 筛选购买动作前n天的数据
+        # filter data
         df_action_p = df_action_all[(df_action_all['user_id'] == user) & (df_action_all['sku_id'] == sku) & (df_action_all['time'] > time_s_string) & (df_action_all['time'] <= time)]
-        # 动作数据集记录以上数据索引,标记为已使用过的数据,以便之后删除
+        # save indexes of special actions
         if i > 0:
             df_action_special_index = df_action_special_index.append(df_action_p.index)
         else:
             df_action_special_index = df_action_p.index
         # print len(df_action_nobuy)
-        # 提取特征值,各项动作的次数
         # print len(df_action_nobuy)
         df_action_type_counts = df_action_p['type'].value_counts()
-        # 处理异常数据\缺失值
+        # fillna
         for k in range(1,7):
             try:
                 df_action_type_counts[k]
             except:
                 df_action_type_counts[k] = 0
-        # 写入一行数据特征值
+        # write a row of features
         df_per.loc[i]={'user_cat':user_cat,'sku_cat':sku_cat,'browser':df_action_type_counts[1],'addchar':df_action_type_counts[2],'delchar':df_action_type_counts[3],'buy':df_action_type_counts[4],'fav':df_action_type_counts[5],'click':df_action_type_counts[6]}
     df_per.to_csv(filename)
     df_action_special_index = df_action_special_index.drop_duplicates()
@@ -129,17 +121,13 @@ def special_per(n, df_action_all, df_action_special, dict_user_cat, dict_sku_cat
 
 # In[4]:
 
-# -----以上是必备函数区域-------
+# -----Functions defined-------
 
 
 # In[5]:
 
-# -*- coding = utf-8 -*-
-# 设定数据存储文件位置
-import pandas as pd
-import numpy as np
 
-# 文件列表
+# Files
 ACTION_201602_FILE = inputData+"JData_Action_201602.csv"
 ACTION_201603_FILE = inputData+"JData_Action_201603.csv"
 ACTION_201604_FILE = inputData+"New_JData_Action_201604.csv"
@@ -154,9 +142,9 @@ BEHAVIOR_TABLE_FILE = inputData + "JData_Table_Behavior.csv"
 
 # In[6]:
 
-# 用户数据读取及处理
+
 df_user = pd.read_csv(USER_FILE)
-# 用户年龄替换成数值
+# process user ages
 def user_age_map(user_age):
     USER_AGE_MAP = {u'15岁以下'.encode('gbk'): 1,
                 u'16-25岁'.encode('gbk'): 2,
@@ -180,8 +168,7 @@ df1 = df_user.applymap(user_age_map)
 
 # In[7]:
 
-# 聚类用户数据
-# 不用,直接根据特征值分类吧,分成93类?
+# abstract users into 93 groups
 def age_sex_string(inputt):
     try:
         str(int(inputt))
@@ -205,15 +192,13 @@ df1['user_cat'] = df1['age'].map(age_sex_string) + df1['sex'].map(age_sex_string
 
 # In[8]:
 
-# 产品数据读取及处理
 df_product = pd.read_csv(PRODUCT_FILE)
 # print df_product.head(20)
 
-# 评价数据
 df_comment = pd.read_csv(COMMENT_FILE)
 # print df_comment.head()
 
-# 产品和评价数据融合
+# merge comments and products
 product_behavior = pd.merge(df_product,df_comment, on=['sku_id'], how = 'outer')
 # print product_behavior.head(50)
 df_pb = product_behavior
@@ -221,8 +206,7 @@ df_pb = product_behavior
 
 # In[9]:
 
-# 聚类产品数据
-# 不用,直接根据特征值分类吧,分成367类
+# abstract products into 367 groups
 def int_to_string(inputt):
     try:
         str(int(inputt))
@@ -236,128 +220,17 @@ df_pb['prod_cat'] = df_pb['a1'].map(int_to_string) + df_pb['a2'].map(int_to_stri
 
 # In[10]:
 
-# 用户与分类之间建立词典
+# user category dictionary
 df_user_cat = df1.loc[:,['user_id','user_cat']]
 dict_user_cat = df_user_cat.set_index('user_id')['user_cat'].to_dict()
-# 产品与分类之间建立词典
+# product category dictionary
 df_sku_cat = df_pb.loc[:,['sku_id','prod_cat']]
 df_sku_cat = df_sku_cat.fillna('00000')
 dict_sku_cat = df_sku_cat.set_index('sku_id')['prod_cat'].to_dict()
 
-
-# In[11]:
-
-# 读取行为数据
-df_action_201602 = pd.read_csv(ACTION_201602_FILE)
-df_action_201603 = pd.read_csv(ACTION_201603_FILE)
-df_action_201604 = pd.read_csv(ACTION_201604_FILE)
-
-
-# In[12]:
-
-# 去除重复行
-df_action_201602 = df_action_201602.drop_duplicates()
-print len(df_action_201602)
-# 去除其他品类数据
-df_action_201602 = df_action_201602[df_action_201602['cate'] == 8]
-print len(df_action_201602)
-
-
-# In[13]:
-
-# 去除重复行
-df_action_201603 = df_action_201603.drop_duplicates()
-print len(df_action_201603)
-# 去除其他品类数据
-df_action_201603 = df_action_201603[df_action_201603['cate'] == 8]
-print len(df_action_201603)
-
-
 # In[ ]:
-
-# 去除重复行
-df_action_201604 = df_action_201604.drop_duplicates()
-print len(df_action_201604)
-# 去除其他品类数据
-df_action_201604 = df_action_201604[df_action_201604['cate'] == 8]
-print len(df_action_201604)
-
-
-# In[ ]:
-
-# 设置总数据集合
-df_action_all = df_action_201602
-# 提取有购买行为的用户在购买行为发生前n天的特征
-df_action_buy = df_action_all[df_action_all['type'] == 4]
-filename_buy = outputData + '201602buy_per.csv'
-df_per, df_action_buy_index = special_per(n, df_action_all, df_action_buy, dict_user_cat, dict_sku_cat, filename_buy)
-# 提取无购买行为的用户在购买行为发生前n天的特征
-df_action_all_nobuy = df_action_all.drop(df_action_buy_index)
-nobuy_sample_n = len(df_action_buy)
-df_action_nobuy = df_action_all.sample(nobuy_sample_n * samplemult)
-filename_nobuy = outputData + '201602nobuy_per.csv'
-df_per, df_action_nobuy_index = special_per(n, df_action_all_nobuy, df_action_nobuy, dict_user_cat, dict_sku_cat, filename_nobuy)
-
-
-# In[ ]:
-
-# 设置总数据集合
-df_action_all = df_action_201603
-# 提取有购买行为的用户在购买行为发生前n天的特征
-df_action_buy = df_action_all[df_action_all['type'] == 4]
-filename_buy = outputData + '201603buy_per.csv'
-df_per, df_action_buy_index = special_per(n, df_action_all, df_action_buy, dict_user_cat, dict_sku_cat, filename_buy)
-# 提取无购买行为的用户在购买行为发生前n天的特征
-df_action_all_nobuy = df_action_all.drop(df_action_buy_index)
-nobuy_sample_n = len(df_action_buy)
-df_action_nobuy = df_action_all.sample(nobuy_sample_n * samplemult)
-filename_nobuy = outputData + '201603nobuy_per.csv'
-df_per, df_action_nobuy_index = special_per(n, df_action_all_nobuy, df_action_nobuy, dict_user_cat, dict_sku_cat, filename_nobuy)
-
-
-# In[ ]:
-
-# 设置总数据集合
-df_action_all = df_action_201604
-# 提取有购买行为的用户在购买行为发生前n天的特征
-df_action_buy = df_action_all[df_action_all['type'] == 4]
-filename_buy = outputData + '201604buy_per.csv'
-df_per, df_action_buy_index = special_per(n, df_action_all, df_action_buy, dict_user_cat, dict_sku_cat, filename_buy)
-# 提取无购买行为的用户在购买行为发生前n天的特征
-df_action_all_nobuy = df_action_all.drop(df_action_buy_index)
-nobuy_sample_n = len(df_action_buy)
-df_action_nobuy = df_action_all.sample(nobuy_sample_n * samplemult)
-filename_nobuy = outputData + '201604nobuy_per.csv'
-df_per_nobuy, df_action_nobuy_index = special_per(n, df_action_all_nobuy, df_action_nobuy, dict_user_cat, dict_sku_cat, filename_nobuy)
-
-
-# In[ ]:
-
-# 保存04月份的未购买数据，这是用于预测的基础数据库
-action_nobuy_index = pd.DataFrame(np.array(df_action_nobuy_index))
-action_nobuy_index.to_csv(outputData + '201604nobuyindex.csv')
-df_action_all_nobuy = df_action_all_nobuy.drop(df_action_nobuy_index)
-df_action_all_nobuy.to_csv(outputData + '201604nobuyaction.csv')
-print len(df_action_all_nobuy)
-
-
-# In[ ]:
-
-# -----以上是数据处理部分------
-
-# In[ ]:
-
-# 读取所有已保存的数据
-filename_all = [outputData + '201602nobuy_per.csv', outputData + '201603buy_per.csv', outputData + '201603nobuy_per.csv', outputData + '201604buy_per.csv', outputData + '201604nobuy_per.csv']
-df_per_all = pd.read_csv(outputData + '201602buy_per.csv', header = 0, index_col = 0)
-for item in filename_all:
-    df_per_all = pd.concat([df_per_all, pd.read_csv(item, header = 0, index_col = 0)])
-df_per_all.to_csv(outputData + 'df_per_all.csv')
-
-
-
-
-# In[ ]:
+    
+# save dictionaries
 import pickle
 def save_obj(obj, name ):
     with open(outputData + name + '.pkl', 'wb') as f:
@@ -370,6 +243,115 @@ def load_obj(name):
 save_obj(dict_user_cat, 'dict_user_cat')
 save_obj(dict_sku_cat, 'dict_sku_cat')
 
+# In[11]:
+
+# action history
+df_action_201602 = pd.read_csv(ACTION_201602_FILE)
+df_action_201603 = pd.read_csv(ACTION_201603_FILE)
+df_action_201604 = pd.read_csv(ACTION_201604_FILE)
+
+
+# In[12]:
+
+df_action_201602 = df_action_201602.drop_duplicates()
+print len(df_action_201602)
+# We only need products of category 8 
+df_action_201602 = df_action_201602[df_action_201602['cate'] == 8]
+print len(df_action_201602)
+
+
+# In[13]:
+
+df_action_201603 = df_action_201603.drop_duplicates()
+print len(df_action_201603)
+# We only need products of category 8 
+df_action_201603 = df_action_201603[df_action_201603['cate'] == 8]
+print len(df_action_201603)
+
+
+# In[ ]:
+
+df_action_201604 = df_action_201604.drop_duplicates()
+print len(df_action_201604)
+# We only need products of category 8 
+df_action_201604 = df_action_201604[df_action_201604['cate'] == 8]
+print len(df_action_201604)
+
+
+# In[ ]:
+
+
+df_action_all = df_action_201602
+# 'buy' is action type 4
+df_action_buy = df_action_all[df_action_all['type'] == 4]
+filename_buy = outputData + '201602buy_per.csv'
+df_per, df_action_buy_index = special_per(n, df_action_all, df_action_buy, dict_user_cat, dict_sku_cat, filename_buy)
+# get features
+df_action_all_nobuy = df_action_all.drop(df_action_buy_index)
+nobuy_sample_n = len(df_action_buy)
+df_action_nobuy = df_action_all.sample(nobuy_sample_n * samplemult)
+filename_nobuy = outputData + '201602nobuy_per.csv'
+df_per, df_action_nobuy_index = special_per(n, df_action_all_nobuy, df_action_nobuy, dict_user_cat, dict_sku_cat, filename_nobuy)
+
+
+# In[ ]:
+
+
+df_action_all = df_action_201603
+# 'buy' is action type 4
+df_action_buy = df_action_all[df_action_all['type'] == 4]
+filename_buy = outputData + '201603buy_per.csv'
+df_per, df_action_buy_index = special_per(n, df_action_all, df_action_buy, dict_user_cat, dict_sku_cat, filename_buy)
+# get features
+df_action_all_nobuy = df_action_all.drop(df_action_buy_index)
+nobuy_sample_n = len(df_action_buy)
+df_action_nobuy = df_action_all.sample(nobuy_sample_n * samplemult)
+filename_nobuy = outputData + '201603nobuy_per.csv'
+df_per, df_action_nobuy_index = special_per(n, df_action_all_nobuy, df_action_nobuy, dict_user_cat, dict_sku_cat, filename_nobuy)
+
+
+# In[ ]:
+
+
+df_action_all = df_action_201604
+# 'buy' is action type 4
+df_action_buy = df_action_all[df_action_all['type'] == 4]
+filename_buy = outputData + '201604buy_per.csv'
+df_per, df_action_buy_index = special_per(n, df_action_all, df_action_buy, dict_user_cat, dict_sku_cat, filename_buy)
+# get features
+df_action_all_nobuy = df_action_all.drop(df_action_buy_index)
+nobuy_sample_n = len(df_action_buy)
+df_action_nobuy = df_action_all.sample(nobuy_sample_n * samplemult)
+filename_nobuy = outputData + '201604nobuy_per.csv'
+df_per_nobuy, df_action_nobuy_index = special_per(n, df_action_all_nobuy, df_action_nobuy, dict_user_cat, dict_sku_cat, filename_nobuy)
+
+
+# In[ ]:
+
+# save nobuy action of April for prediction
+action_nobuy_index = pd.DataFrame(np.array(df_action_nobuy_index))
+action_nobuy_index.to_csv(outputData + '201604nobuyindex.csv')
+df_action_all_nobuy = df_action_all_nobuy.drop(df_action_nobuy_index)
+df_action_all_nobuy.to_csv(outputData + '201604nobuyaction.csv')
+print len(df_action_all_nobuy)
+
+
+# In[ ]:
+
+# -----Features extracted------
+
+# In[ ]:
+
+# concatenate all the features
+filename_all = [outputData + '201602nobuy_per.csv', outputData + '201603buy_per.csv', outputData + '201603nobuy_per.csv', outputData + '201604buy_per.csv', outputData + '201604nobuy_per.csv']
+df_per_all = pd.read_csv(outputData + '201602buy_per.csv', header = 0, index_col = 0)
+for item in filename_all:
+    df_per_all = pd.concat([df_per_all, pd.read_csv(item, header = 0, index_col = 0)])
+df_per_all.to_csv(outputData + 'df_per_all.csv')
+
+
+
+
 # In[ ]:
 
 df_action_all_nobuy = pd.read_csv(outputData + '201604nobuyaction.csv', header = 0, index_col = 0)
@@ -377,41 +359,35 @@ df_action_all_nobuy = pd.read_csv(outputData + '201604nobuyaction.csv', header =
 
 # In[ ]:
 
-# 提取2016-04-16到2016-04-20用户行为
-# 设置总数据集合
+
 df_action_all = df_action_all_nobuy
 print len(df_action_all)
-# 筛选出预测用户和预测产品的相关数据
+# filter out all the users and products for prediction
 df_action_all = df_action_all[(df_action_all['user_id'].isin(dict_user_cat.keys())) & (df_action_all['sku_id'].isin(dict_sku_cat.keys()))]
 print df_action_all.head()
 print len(df_action_all)
-# 筛选不筛选是一样一样的
+
 
 
 # In[ ]:
 
-# 使用用户产品对作为索引
+# combine user_sku as primary key
 df_action_all['user_sku'] = df_action_all['user_id']*100000000 + df_action_all['sku_id']
 df_user_sku = df_action_all.drop_duplicates(['user_sku'])
 
 
 # In[ ]:
 
-# 补全数据，形成预测对象数据，所有的4月份用户产品对
+# prepare to predict for all the user_sku pairs in April 
 df_user_sku['time'] = '2016-04-11 00:00:00'
 df_user_sku['type'] = 0
 print df_user_sku, len(df_user_sku)
-
-
-# In[ ]:
-
-# 保存用户数据对
 df_user_sku.to_csv(outputData + '201604_user_sku.csv')
 
 
 # In[ ]:
 
-# 寻找特征数据
+# get features
 filename_unknown = outputData + '20160416unknown_per.csv'
 df_per_unknown = special_predict(n, df_action_all, df_user_sku, dict_user_cat, dict_sku_cat, filename_unknown)
 df_per_unknown.to_csv(filename_unknown)
