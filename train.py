@@ -179,19 +179,6 @@ clf.fit(X, y)
 
 # -----testing part------
 
-# read dictionaries
-import pickle
-def save_obj(obj, name ):
-    with open(outputData + name + '.pkl', 'wb') as f:
-        pickle.dump(obj, f, pickle.HIGHEST_PROTOCOL)
-
-def load_obj(name):
-    with open(outputData + name + '.pkl', 'rb') as f:
-        return pickle.load(f)
-    
-dict_user_cat = load_obj('dict_user_cat')
-dict_sku_cat = load_obj('dict_sku_cat')
-
 
 
 # -------read features and user_sku pairs to predict -------
@@ -258,7 +245,24 @@ results.to_csv(resultsfilename, index=False)
 # evaluation
 ground_truth_file = 'ground_truth.csv'
 ground_truth = pd.read_csv(outputData + ground_truth_file, index_col = 0)
-#ground_truth['user_sku'] = ground_truth['user_id']*100000000 + ground_truth['sku_id']
+ground_truth['user_sku'] = ground_truth['user_id']*100000000 + ground_truth['sku_id']
+df_user_sku['ground_truth'] = df_user_sku['user_sku'].isin(ground_truth['user_sku'])
+
+print metric_list
+print performance(df_user_sku['ground_truth'], df_user_sku['buy'])
+print metrics.classification_report(df_user_sku['ground_truth'], df_user_sku['buy'])
+print metrics.confusion_matrix(df_user_sku['ground_truth'], df_user_sku['buy'])
+'''
+F11 = 6*Recall*Precision/(5*Recall+Precision), F12 = 5*Recall*Precision/(2*Recall+3*Precision)
+Score = 0.4*F11 + 0.6*F12
+'''
+Precision = metrics.precision_score(df_user_sku['ground_truth'], df_user_sku['buy'])   
+Recall = metrics.recall_score(df_user_sku['ground_truth'], df_user_sku['buy'])
+F11 = 6*Recall*Precision/(5*Recall+Precision)
+F12 = 5*Recall*Precision/(2*Recall+3*Precision)
+Score = 0.4*F11 + 0.6*F12
+print Score
+
 #df_user_sku['user_sku'].shape
 #ground_truth['user_sku'].shape
         
@@ -274,5 +278,6 @@ print metric_list
 print performance(buy_or_nobuy['ground_truth'], buy_or_nobuy['buy'])
 print metrics.classification_report(buy_or_nobuy['ground_truth'], buy_or_nobuy['buy'])
 print metrics.confusion_matrix(buy_or_nobuy['ground_truth'], buy_or_nobuy['buy'])
+
 
 

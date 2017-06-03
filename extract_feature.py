@@ -357,6 +357,10 @@ df_per_all.to_csv(outputData + 'df_per_all.csv')
 df_action_all_nobuy = pd.read_csv(outputData + '201604nobuyaction.csv', header = 0, index_col = 0)
 
 
+dict_user_cat = load_obj('dict_user_cat')
+dict_sku_cat = load_obj('dict_sku_cat')
+
+
 # In[ ]:
 
 
