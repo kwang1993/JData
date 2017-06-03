@@ -19,7 +19,7 @@ from sklearn import neighbors
 
 inputData = '../JData/'
 outputData = 'data/'
-resultData = 'results/'
+
 
 def performance(y_true, y_pred):
     """
@@ -37,6 +37,7 @@ def performance(y_true, y_pred):
                   options: 'accuracy', 'f1-score', 'auroc', 'precision',
                            'sensitivity', 'specificity' 
     """   
+
     m = metrics.confusion_matrix(y_true, y_pred)
     #print m
     metric = np.zeros(6)
@@ -106,7 +107,7 @@ for k in range(0, 5):
     except:
         df_buy_counts[k] = 0
 for k in range(0, 5):
-    print('buy ', k, 'count = ', df_buy_counts[k])
+    print 'buy ', k, 'count = ', df_buy_counts[k] 
 
 # convert the 'buy_number > 1' as 1
 df_per_all[df_per_all.buy > 1] = 1
@@ -118,7 +119,7 @@ for k in range(0, 2):
     except:
         df_buy_counts[k] = 0
 for k in range(0, 2):
-    print('buy ', k, 'count = ', df_buy_counts[k])
+    print 'buy ', k, 'count = ', df_buy_counts[k] 
 
 X = np.array(df_per_all.drop('buy',axis =1))
 y = np.array(df_per_all['buy'])
@@ -133,43 +134,45 @@ y = np.array(df_per_all['buy'])
 #skf = StratifiedKFold(y_train, n_folds=5)
 skf = StratifiedKFold(y, n_folds=5)
 
-cls = 'GBDT' #0.773114977823
-#cls = 'bayes' #0.655407710679
-#cls = 'GBDT' #0.841282838622
-#cls = 'lr' #0.831252132378
-#cls = 'svm' #SVM is not suitable here
-#cls = 'rf' #0.797884680996
-#cls = 'knn' #0.782668031389
-if cls == 'tree':
-  clf = tree.DecisionTreeClassifier()
-if cls == 'bayes':
-  clf = naive_bayes.GaussianNB()
-if cls == 'GBDT':
-  clf = ensemble.GradientBoostingClassifier()
-if cls == 'lr':
-  clf = linear_model.LogisticRegression()
-if cls == 'svm':  
-  clf = svm.SVC(kernel = 'linear')
-if cls == 'rf':
-  clf = ensemble.randomForestClassifer(max_depth = 5)
-if cls == 'knn':  
-  clf = neighbors.KNeighborsClassifier()
+#cls = 'tree' 
+#cls = 'bayes' 
+#cls = 'GBDT' 
+#cls = 'lr' 
+#cls = 'svm' 
+#cls = 'rf' 
+#cls = 'knn' 
+model = None
+model_name = 'tree'
 
-print "cv Performance for " + cls
-metric_list = ["accuracy", "f1_score", "auroc", "precision", "sensitivity", "specificity"]
-#metric = cv_performance(clf, X_train, y_train, skf)
-metric = cv_performance(clf, X, y, skf)
-print metric_list
-print metric
-
-'''
-print "test Performance for " + cls
-metric_list = ["accuracy", "f1_score", "auroc", "precision", "sensitivity", "specificity"]
-metric = test_performance(clf, X_train, y_train, X_test, y_test, skf)
-print metric_list
-print metric
-'''
-
+score = 0
+for cls in ['tree', 'bayes', 'GBDT', 'lr', 'rf', 'knn']:
+    if cls == 'tree':
+      clf = tree.DecisionTreeClassifier()
+    if cls == 'bayes':
+      clf = naive_bayes.GaussianNB()
+    if cls == 'GBDT':
+      clf = ensemble.GradientBoostingClassifier()
+    if cls == 'lr':
+      clf = linear_model.LogisticRegression()
+    if cls == 'svm':  
+      clf = svm.SVC(kernel = 'linear')
+    if cls == 'rf':
+      clf = ensemble.RandomForestClassifier(max_depth = 5)
+    if cls == 'knn':  
+      clf = neighbors.KNeighborsClassifier()
+    
+    print "cv Performance for " + cls
+    metric_list = ["accuracy", "f1_score", "auroc", "precision", "sensitivity", "specificity"]
+    #metric = cv_performance(clf, X_train, y_train, skf)
+    metric = cv_performance(clf, X, y, skf)
+    print metric_list
+    print metric
+    if metric[0] > score:
+        score = metric[0]
+        model = clf
+        model_name = cls
+print model_name # GBDT
+clf = model
 
 
 
@@ -251,7 +254,7 @@ def int_to_str(id):
 results = results.loc[:,['user_id','sku_id']]
 results['user_id'] = results['user_id'].apply(int_to_str)
 
-resultsfilename = 'results_n' + str(n) + '_cls' + cls +'.csv'
+resultsfilename = outputData + 'results_n' + str(n) + '_cls' + cls +'.csv'
 results.to_csv(resultsfilename, index=False)
 
 
@@ -259,4 +262,22 @@ results.to_csv(resultsfilename, index=False)
 # In[ ]:
     
 # evaluation
-ground_truth = pd.read_csv(outputData + 'ground_truth.csv')
+ground_truth = pd.read_csv(outputData + 'ground_truth.csv', index_col = 0)
+ground_truth['user_sku'] = ground_truth['user_id']*100000000 + ground_truth['sku_id']
+df_user_sku['user_sku'].shape
+ground_truth['user_sku'].shape
+        
+buy_or_nobuy = pd.DataFrame({'user_id': df_user_sku['user_id'].unique()})
+buy_or_nobuy['buy'] = buy_or_nobuy['user_id'].isin(df_user_sku.user_id[df_user_sku['buy'] == 1])
+buy_or_nobuy['ground_truth'] = buy_or_nobuy['user_id'].isin(ground_truth['user_id'])
+buy_or_nobuy['buy'].value_counts()
+buy_or_nobuy['ground_truth'].value_counts()    
+buy_or_nobuy = buy_or_nobuy.set_index('user_id') 
+buy_or_nobuy.to_csv(outputData + 'evalutation_n' + str(n) + '_cls' + cls +'.csv')  
+
+print metric_list
+print performance(buy_or_nobuy['ground_truth'], buy_or_nobuy['buy'])
+print metrics.classification_report(buy_or_nobuy['ground_truth'], buy_or_nobuy['buy'])
+print metrics.confusion_matrix(buy_or_nobuy['ground_truth'], buy_or_nobuy['buy'])
+
+
