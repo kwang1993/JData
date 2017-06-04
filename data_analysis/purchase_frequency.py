@@ -142,6 +142,30 @@ def main():
         print t
         dfTypeCate(3, df, t)
         
+#    df_type = df[(df['type'] == 2) & (df['time'] >= '2016-03-05') & (df['time'] <= '2016-03-08')]
+#    counts = df_type['time'].value_counts().sort_index()
+#    time_sorted = counts.index
+#    fig = plt.figure()
+#    plt.xticks(rotation = 45)
+#    plt.plot(time_sorted, counts)
+#    plt.xlabel('date')
+#    plt.ylabel('number of actions')
+#    title = 'number of adding to carts 03-06'
+#    plt.title(title)
+#    fig.savefig(title)
+#
+#    df_type = df[(df['type'] == 2) & (df['time'] >= '2016-03-11') & (df['time'] <= '2016-03-13')]
+#    counts = df_type['time'].value_counts().sort_index()
+#    time_sorted = counts.index
+#    fig = plt.figure()
+#    plt.xticks(rotation = 45)
+#    plt.plot(time_sorted, counts)
+#    plt.xlabel('date')
+#    plt.ylabel('number of actions')
+#    title = 'number of adding to carts 03-12'
+#    plt.title(title)
+#    fig.savefig(title)    
+    
     df = loadData(dataDir, 'JData_Action_201604.csv') 
     df1 = df.loc[df['type'] == 4, ['user_id', 'sku_id']]
     df1['user_sku'] = df1['user_id']*100000000 + df1['sku_id']
