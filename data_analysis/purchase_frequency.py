@@ -68,14 +68,31 @@ def getSimilarItems(model, itemid): # find related items
         print i, p
     return related
 
-def dfTypeCate(df, type_no, cate_no):
+def dfTypeCate(month, df, type_no, cate_no = None):
     df_type = df[df['type'] == type_no]
-    df_type_cate = df_type[df_type['cate']==cate_no]
+    if cate_no:
+        df_type_cate = df_type[df_type['cate']==cate_no]
+    else:
+        df_type_cate = df_type
     #dataFrameInfo(df_click_8)
     counts = df_type_cate['time'].value_counts().sort_index()
     time_sorted = counts.index
+    fig = plt.figure()
     plt.xticks(rotation = 45)
     plt.plot(time_sorted, counts)
+    plt.xlabel('date')
+    plt.ylabel('number of actions')
+    
+    action = ['',
+              'browsing', 
+              'adding to cart',
+              'deleting from cart',
+              'purchases',
+              'favoring items',
+              'clicks']
+    title = 'number of ' + action[type_no] + ' over time'
+    plt.title(title)
+    fig.savefig(str(month) +' '+ title)
     print "\nuser number = %d" % len(df_type_cate['user_id'].unique())
     print "\nsku number = %d" % len(df_type_cate['sku_id'].unique()) 
     return df_type_cate
@@ -104,6 +121,10 @@ def main():
     plt.title(title) 
     fig.savefig(title)
     
+    for t in df.type.value_counts().index:
+        print t
+        dfTypeCate(2, df, t)
+    
     df = loadData(dataDir, 'JData_Action_201603.csv')
     df1 = df.loc[df['type'] == 4, ['user_id', 'sku_id']]
     df1['user_sku'] = df1['user_id']*100000000 + df1['sku_id']
@@ -117,6 +138,10 @@ def main():
     plt.title(title) 
     fig.savefig(title)
     
+    for t in df.type.value_counts().index:
+        print t
+        dfTypeCate(3, df, t)
+        
     df = loadData(dataDir, 'JData_Action_201604.csv') 
     df1 = df.loc[df['type'] == 4, ['user_id', 'sku_id']]
     df1['user_sku'] = df1['user_id']*100000000 + df1['sku_id']
@@ -130,7 +155,9 @@ def main():
     plt.title(title) 
     fig.savefig(title)   
     
-  
+    for t in df.type.value_counts().index:
+        print t
+        dfTypeCate(4, df, t)
 
 
     
