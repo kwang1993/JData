@@ -21,7 +21,7 @@ test_size= .2
 samplemult = 1
 
 
-def performance(y_true, y_pred):
+def performance(y_true, y_pred, y_prob):
     """
     Calculates the performance metric based on the agreement between the 
     true labels and the predicted labels.
@@ -43,7 +43,7 @@ def performance(y_true, y_pred):
     metric = np.zeros(6)
     metric[0] = metrics.accuracy_score(y_true, y_pred)
     metric[1] = metrics.f1_score(y_true, y_pred) 
-    metric[2] = metrics.roc_auc_score(y_true, y_pred)
+    metric[2] = metrics.roc_auc_score(y_true, y_prob)
     metric[3] = metrics.precision_score(y_true, y_pred)   
     
     TP = m[0, 0]
@@ -80,6 +80,7 @@ def cv_performance(clf, X, y, kf):
     """
     metric = np.zeros(6)
     num = 0.0
+    '''
     for train_index, test_index in kf:
         #print("TRAIN:", train_index, "TEST:", test_index)
         X_train, X_test = X[train_index], X[test_index]
@@ -88,6 +89,10 @@ def cv_performance(clf, X, y, kf):
         metric = metric + performance(y_test, clf.predict(X_test))
         num += 1
     metric = metric / num
+    '''
+    clf.fit(X, y)
+    y_prob = clf.predict_proba(X)
+    metric = performance(y, clf.predict(X), y_prob[:,1])
     return metric
 
 def test_performance(clf, X_train, y_train, X_test, y_test, kf):
@@ -250,7 +255,7 @@ df_user_sku['ground_truth'] = df_user_sku['user_sku'].isin(ground_truth['user_sk
 #df_user_sku['user_sku'].shape
 #ground_truth['user_sku'].shape
 print metric_list
-print performance(df_user_sku['ground_truth'], df_user_sku['buy'])
+print performance(df_user_sku['ground_truth'], df_user_sku['buy'], df_user_sku['buy_prob'])
 print metrics.classification_report(df_user_sku['ground_truth'], df_user_sku['buy'])
 print metrics.confusion_matrix(df_user_sku['ground_truth'], df_user_sku['buy'])
 '''
@@ -276,8 +281,8 @@ buy_or_nobuy['ground_truth'] = buy_or_nobuy['user_id'].isin(ground_truth['user_i
 buy_or_nobuy = buy_or_nobuy.set_index('user_id') 
 buy_or_nobuy.to_csv(outputData + 'evalutation_n' + str(n) + '_cls' + cls +'.csv')  
 
-print metric_list
-print performance(buy_or_nobuy['ground_truth'], buy_or_nobuy['buy'])
+#print metric_list
+#print performance(buy_or_nobuy['ground_truth'], buy_or_nobuy['buy'])
 print metrics.classification_report(buy_or_nobuy['ground_truth'], buy_or_nobuy['buy'])
 print metrics.confusion_matrix(buy_or_nobuy['ground_truth'], buy_or_nobuy['buy'])
 

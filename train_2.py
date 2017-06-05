@@ -98,14 +98,34 @@ def test_performance(clf, X_train, y_train, X_test, y_test, kf):
 # -----training part------
 
 # read the stored training data
-df_p1_buy_per = pd.read_csv(outputData + 'df_p1_buy_per.csv')
-df_p1_nobuy_per = pd.read_csv(outputData + 'df_p1_nobuy_per.csv')
-df_p2_buy_per = pd.read_csv(outputData + 'df_p2_buy_per.csv')
-df_p2_nobuy_per = pd.read_csv(outputData + 'df_p2_nobuy_per.csv')
+df_p1_buy_per = pd.read_csv(outputData + 'df_p1_buy_per.csv',header = 0, index_col = 0)
+df_p1_nobuy_per = pd.read_csv(outputData + 'df_p1_nobuy_per.csv',header = 0, index_col = 0)
+df_p2_buy_per = pd.read_csv(outputData + 'df_p2_buy_per.csv',header = 0, index_col = 0)
+df_p2_nobuy_per = pd.read_csv(outputData + 'df_p2_nobuy_per.csv',header = 0, index_col = 0)
+
+df_per_all = pd.concat([df_p1_buy_per, df_p1_nobuy_per], ignore_index = True)
+#df_per_all.sku_cate = df_per_all.sku_cate.astype('str')
+df_per_all.drop(['buy8', 'buy4', 'buy2', 'user_cate', 'sku_cate'], axis = 1, inplace = 1)
+df_per_all.shape
+
+df_per_test = pd.concat([df_p2_buy_per, df_p2_nobuy_per], ignore_index = True)
+df_per_test.drop(['buy8', 'buy4', 'buy2', 'user_cate', 'sku_cate'], axis = 1, inplace = 1)
+
+df_buy_counts = df_per_all['label'].value_counts()
+X = np.array(df_per_all.drop('label',axis =1))
+
+y = np.array(df_per_all['label'])
+
+X_unknown = np.array(df_per_test.drop('label',axis =1))
+
+y_true = np.array(df_per_test['label'])
+#######################
+'''
 df_per_all = pd.concat([df_p1_buy_per, df_p1_nobuy_per, df_p2_buy_per, df_p2_nobuy_per], ignore_index = True)
+df_per_all.shape
 #df_per_all = pd.read_csv(outputData + 'df_per.csv', header = 0, index_col = 0)
 df_buy_counts = df_per_all['label'].value_counts()
-
+'''
 #for k in range(0, 5):
 #    try:
 #        df_buy_counts[k]
@@ -176,9 +196,14 @@ for cls in ['tree', 'bayes', 'GBDT', 'lr', 'rf', 'knn']:
         score = metric[0]
         model = clf
         model_name = cls
-print model_name # GBDT
-#clf = model
-#clf.fit(X, y)
+print model_name 
+
+
+
+clf = model
+clf.fit(X, y)
+
+
 ##print list(df_per_all.drop('buy',axis =1).columns)
 ##print clf.feature_importances_ 
 #
@@ -188,7 +213,7 @@ print model_name # GBDT
 #
 ## -------read features and user_sku pairs to predict -------
 #filename_unknown = outputData + '20160416unknown_per.csv'
-#df_user_sku = pd.read_csv(outputData + '201604_user_sku.csv', header = 0, index_col = 0)
+df_user_sku = pd.read_csv(outputData + '201604_user_sku.csv', header = 0, index_col = 0)
 #df_per_unknown = pd.read_csv(filename_unknown, header = 0, index_col = 0)
 #
 #
@@ -197,11 +222,19 @@ print model_name # GBDT
 ## predict buy action
 #X_unknown = np.array(df_per_unknown.drop('buy',axis =1))
 #print X_unknown
-#predictions = clf.predict(X_unknown)
-#pre_prob = clf.predict_proba(X_unknown)
+predictions = clf.predict(X_unknown)
+pre_prob = clf.predict_proba(X_unknown)
 #print predictions,pre_prob
 #
 #
+print metrics.accuracy_score(y_true, predictions)
+print metrics.classification_report(y_true, predictions)
+print metrics.confusion_matrix(y_true, predictions)
+
+
+
+
+
 ## In[ ]:
 #
 ## merge predictions into dataframe
@@ -245,46 +278,45 @@ print model_name # GBDT
 #
 #
 #
-## In[ ]:
-#    
-## evaluation
-#ground_truth_file = 'ground_truth.csv'
-#ground_truth = pd.read_csv(outputData + ground_truth_file, index_col = 0)
-#ground_truth['user_sku'] = ground_truth['user_id']*100000000 + ground_truth['sku_id']
-#df_user_sku['ground_truth'] = df_user_sku['user_sku'].isin(ground_truth['user_sku'])
-##df_user_sku['user_sku'].shape
-##ground_truth['user_sku'].shape
-#print metric_list
-#print performance(df_user_sku['ground_truth'], df_user_sku['buy'])
-#print metrics.classification_report(df_user_sku['ground_truth'], df_user_sku['buy'])
-#print metrics.confusion_matrix(df_user_sku['ground_truth'], df_user_sku['buy'])
-#'''
-#Official evaluation:
-#    
-#F11 = 6*Recall*Precision/(5*Recall+Precision), F12 = 5*Recall*Precision/(2*Recall+3*Precision)
-#Score = 0.4*F11 + 0.6*F12
-#'''
-#Precision = metrics.precision_score(df_user_sku['ground_truth'], df_user_sku['buy'])   
-#Recall = metrics.recall_score(df_user_sku['ground_truth'], df_user_sku['buy'])
-#F11 = 6*Recall*Precision/(5*Recall+Precision)
-#F12 = 5*Recall*Precision/(2*Recall+3*Precision)
-#Score = 0.4*F11 + 0.6*F12
-#print Score 
-#
-#
-## what about the accuracy of buy/nobuy prediction
-#buy_or_nobuy = pd.DataFrame({'user_id': df_user_sku['user_id'].unique()})
-#buy_or_nobuy['buy'] = buy_or_nobuy['user_id'].isin(df_user_sku.user_id[df_user_sku['buy'] == 1])
-#buy_or_nobuy['ground_truth'] = buy_or_nobuy['user_id'].isin(ground_truth['user_id'])
-##buy_or_nobuy['buy'].value_counts()
-##buy_or_nobuy['ground_truth'].value_counts()    
-#buy_or_nobuy = buy_or_nobuy.set_index('user_id') 
-#buy_or_nobuy.to_csv(outputData + 'evalutation_n' + str(n) + '_cls' + cls +'.csv')  
-#
-#print metric_list
-#print performance(buy_or_nobuy['ground_truth'], buy_or_nobuy['buy'])
-#print metrics.classification_report(buy_or_nobuy['ground_truth'], buy_or_nobuy['buy'])
-#print metrics.confusion_matrix(buy_or_nobuy['ground_truth'], buy_or_nobuy['buy'])
+# In[ ]:
+    
+# evaluation
+ground_truth_file = 'ground_truth.csv'
+ground_truth = pd.read_csv(outputData + ground_truth_file, index_col = 0)
+ground_truth['user_sku'] = ground_truth['user_id']*100000000 + ground_truth['sku_id']
+df_user_sku['ground_truth'] = df_user_sku['user_sku'].isin(ground_truth['user_sku'])
+#df_user_sku['user_sku'].shape
+#ground_truth['user_sku'].shape
+print metric_list
+print performance(df_user_sku['ground_truth'], df_user_sku['buy'])
+print metrics.classification_report(df_user_sku['ground_truth'], df_user_sku['buy'])
+print metrics.confusion_matrix(df_user_sku['ground_truth'], df_user_sku['buy'])
+'''
+Official evaluation:
+    
+F11 = 6*Recall*Precision/(5*Recall+Precision), F12 = 5*Recall*Precision/(2*Recall+3*Precision)
+Score = 0.4*F11 + 0.6*F12
+'''
+Precision = metrics.precision_score(df_user_sku['ground_truth'], df_user_sku['buy'])   
+Recall = metrics.recall_score(df_user_sku['ground_truth'], df_user_sku['buy'])
+F11 = 6*Recall*Precision/(5*Recall+Precision)
+F12 = 5*Recall*Precision/(2*Recall+3*Precision)
+Score = 0.4*F11 + 0.6*F12
+print Score 
 
+
+# what about the accuracy of buy/nobuy prediction
+buy_or_nobuy = pd.DataFrame({'user_id': df_user_sku['user_id'].unique()})
+buy_or_nobuy['buy'] = buy_or_nobuy['user_id'].isin(df_user_sku.user_id[df_user_sku['buy'] == 1])
+buy_or_nobuy['ground_truth'] = buy_or_nobuy['user_id'].isin(ground_truth['user_id'])
+#buy_or_nobuy['buy'].value_counts()
+#buy_or_nobuy['ground_truth'].value_counts()    
+buy_or_nobuy = buy_or_nobuy.set_index('user_id') 
+buy_or_nobuy.to_csv(outputData + 'evalutation_n' + str(n) + '_cls' + cls +'.csv')  
+
+print metric_list
+print performance(buy_or_nobuy['ground_truth'], buy_or_nobuy['buy'])
+print metrics.classification_report(buy_or_nobuy['ground_truth'], buy_or_nobuy['buy'])
+print metrics.confusion_matrix(buy_or_nobuy['ground_truth'], buy_or_nobuy['buy'])
 
 

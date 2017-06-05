@@ -156,7 +156,7 @@ def special_per(n, df_action_all, df_action_special, dict_user_cat, dict_sku_cat
                        'browser4':df_action_type_counts4[1],'addchar4':df_action_type_counts4[2],'delchar4':df_action_type_counts4[3],'buy4':df_action_type_counts4[4],'fav4':df_action_type_counts4[5],'click4':df_action_type_counts4[6],
                        'browser2':df_action_type_counts2[1],'addchar2':df_action_type_counts2[2],'delchar2':df_action_type_counts2[3],'buy2':df_action_type_counts2[4],'fav2':df_action_type_counts2[5],'click2':df_action_type_counts2[6],
                        'label':label}
-        print df_per.loc[i]
+        #print df_per.loc[i]
     #df_per.to_csv(filename)
     #df_action_special_index = df_action_special_index.drop_duplicates()
     return df_per
