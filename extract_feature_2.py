@@ -152,6 +152,7 @@ def special_per(n, df_action_all, df_action_special, dict_user_cat, dict_sku_cat
                        'browser4':df_action_type_counts4[1],'addchar4':df_action_type_counts4[2],'delchar4':df_action_type_counts4[3],'buy4':df_action_type_counts4[4],'fav4':df_action_type_counts4[5],'click4':df_action_type_counts4[6],
                        'browser2':df_action_type_counts2[1],'addchar2':df_action_type_counts2[2],'delchar2':df_action_type_counts2[3],'buy2':df_action_type_counts2[4],'fav2':df_action_type_counts2[5],'click2':df_action_type_counts2[6],
                        'label':label}
+        print df_per.loc[i]
     #df_per.to_csv(filename)
     #df_action_special_index = df_action_special_index.drop_duplicates()
     return df_per
@@ -169,8 +170,11 @@ df_p1_nobuy = df_p1_nobuy.sample(df_p1_buy.shape[0])
 
 
 df_p1_buy_per = special_per(n, df_p1, df_p1_buy, dict_user_cat, dict_sku_cat, 1)
+df_p1_buy_per.to_csv(outputData + 'df_p1_buy_per.csv')
 df_p1_nobuy_per = special_per(n, df_p1, df_p1_nobuy, dict_user_cat, dict_sku_cat, 0)
-
+df_p1_nobuy_per.to_csv(outputData + 'df_p1_nobuy_per.csv')
+#df_per1 = pd.concat([df_p1_buy_per, df_p1_nobuy_per], ignore_index = True)
+#df_per1.to_csv(outputData + 'df_per1.csv')
 
 
 
@@ -186,8 +190,8 @@ df_p2_nobuy = df_p2_nobuy.sample(df_p2_buy.shape[0])
 
 
 df_p2_buy_per = special_per(n, df_p2, df_p2_buy, dict_user_cat, dict_sku_cat, 1)
+df_p2_buy_per.to_csv(outputData + 'df_p2_buy_per.csv')
 df_p2_nobuy_per = special_per(n, df_p2, df_p2_nobuy, dict_user_cat, dict_sku_cat, 0)
-
-
-df_per = pd.concat([df_p1_buy_per, df_p1_nobuy_per, df_p2_buy_per, df_p2_nobuy_per], ignore_index = True)
-df_per.to_csv(outputData + 'df_per.csv')
+df_p2_nobuy_per.to_csv(outputData + 'df_p2_nobuy_per.csv')
+#df_per2 = pd.concat([df_p2_buy_per, df_p2_nobuy_per], ignore_index = True)
+#df_per2.to_csv(outputData + 'df_per2.csv')
