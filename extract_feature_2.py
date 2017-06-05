@@ -3,7 +3,7 @@ import pandas as pd
 
 inputData = '../JData/'
 outputData = 'data_1/'
-# 文件列表
+
 ACTION_201602_FILE = inputData + "JData_Action_201602.csv"
 ACTION_201603_FILE = inputData + "JData_Action_201603.csv"
 ACTION_201604_FILE = inputData + "JData_Action_201604.csv"
@@ -19,6 +19,7 @@ PERIOD_3 = outputData + 'Period_3.csv'
 PERIOD_3_test = outputData + 'Period_3_test.csv'
 
 
+# load data
 
 df3 = pd.read_csv(ACTION_201603_FILE)
 df3 = df3.drop_duplicates()
@@ -30,6 +31,9 @@ df4 = df4[df4.cate == 8]
 df = pd.concat([df3, df4], ignore_index = True)
 
 df.to_csv(outputData + 'action34.csv')
+
+
+# split data
 
 '''
 # 从dataSet_path中按照 BEGINDAY, ENDDAY 拆分数据集
@@ -74,13 +78,13 @@ dict_sku_cat = load_obj('dict_sku_cat')
 n = 8
 def special_per(n, df_action_all, df_action_special, dict_user_cat, dict_sku_cat, label):
     '''
-    输入：
-    n：产生特定行为数据之前n天的数据组成特征（特定用户针对特定产品）
-    df_action_all：全部行为数据
-    df_action_special:特定行为数据
-    输出：
-    df_per:输出的数据组成特征
-    df_action_special_index:构成以上数据组成特征的原始数据索引
+    input：
+    n：days before purchase
+    df_action_all：action history
+    df_action_special: purchase action 
+    output:
+    df_per: features per special action
+
     '''
 
     # df_action_special变为array,加快索引效率
