@@ -13,7 +13,7 @@ from sklearn import svm
 from sklearn import neighbors
 
 inputData = '../JData/'
-outputData = 'data_1/'
+outputData = 'results/'
 
 
 n = 2
@@ -98,10 +98,10 @@ def test_performance(clf, X_train, y_train, X_test, y_test, kf):
 # -----training part------
 
 # read the stored training data
-df_p1_buy_per = pd.read_csv(outputData + 'df_p1_buy_per.csv',header = 0, index_col = 0)
-df_p1_nobuy_per = pd.read_csv(outputData + 'df_p1_nobuy_per.csv',header = 0, index_col = 0)
-df_p2_buy_per = pd.read_csv(outputData + 'df_p2_buy_per.csv',header = 0, index_col = 0)
-df_p2_nobuy_per = pd.read_csv(outputData + 'df_p2_nobuy_per.csv',header = 0, index_col = 0)
+df_p1_buy_per = pd.read_csv('data/df_p1_buy_per.csv',header = 0, index_col = 0)
+df_p1_nobuy_per = pd.read_csv('data/df_p1_nobuy_per.csv',header = 0, index_col = 0)
+df_p2_buy_per = pd.read_csv('data/df_p2_buy_per.csv',header = 0, index_col = 0)
+df_p2_nobuy_per = pd.read_csv('data/df_p2_nobuy_per.csv',header = 0, index_col = 0)
 
 df_per_all = pd.concat([df_p1_buy_per, df_p1_nobuy_per], ignore_index = True)
 #df_per_all.sku_cate = df_per_all.sku_cate.astype('str')
@@ -213,7 +213,7 @@ clf.fit(X, y)
 #
 ## -------read features and user_sku pairs to predict -------
 #filename_unknown = outputData + '20160416unknown_per.csv'
-df_user_sku = pd.read_csv(outputData + '201604_user_sku.csv', header = 0, index_col = 0)
+df_user_sku = pd.read_csv('data/201604_user_sku.csv', header = 0, index_col = 0)
 #df_per_unknown = pd.read_csv(filename_unknown, header = 0, index_col = 0)
 #
 #
@@ -233,90 +233,63 @@ print metrics.confusion_matrix(y_true, predictions)
 
 
 
+clf = model
+clf.fit(X, y)
+# -------read features and user_sku pairs to predict -------
+filename_unknown = 'data/20160416unknown_per.csv'
+df_user_sku = pd.read_csv('data/201604_user_sku.csv', header = 0, index_col = 0)
+df_per_unknown = pd.read_csv(filename_unknown, header = 0, index_col = 0)
+df_per_unknown.drop(['user_id', 'sku_id'], axis=1, inplace=True)
 
 
-## In[ ]:
-#
-## merge predictions into dataframe
-#df_user_sku['buy'] = predictions
-#df_user_sku['buy_prob'] = pre_prob[:,1]
-#print df_user_sku
-#
-#
-## In[ ]:
-#
-## filter out purchases
-#df_buy = df_user_sku[df_user_sku['buy'] == 1]
-#print df_buy
-#
-#
-## In[ ]:
-#
-## get best sku for each user
-#def best_sku(df):
-#  return (df.sort(['buy_prob'], ascending = False)).iloc[0,:]
-#
-#
-## In[ ]:
-#
-## sku group by each user
-#grouped = df_buy.groupby(['user_id'])
-#results = grouped.apply(best_sku)
-#
-#
-## In[ ]:
-#
-#def int_to_str(id):
-#  return str(int(id))
-#
-## results
-#results = results.loc[:,['user_id','sku_id']]
-#results['user_id'] = results['user_id'].apply(int_to_str)
-#
-#resultsfilename = outputData + 'results_n' + str(n) + '_cls' + cls +'.csv'
-#results.to_csv(resultsfilename, index=False)
-#
-#
-#
 # In[ ]:
-    
-# evaluation
-ground_truth_file = 'ground_truth.csv'
-ground_truth = pd.read_csv(outputData + ground_truth_file, index_col = 0)
-ground_truth['user_sku'] = ground_truth['user_id']*100000000 + ground_truth['sku_id']
-df_user_sku['ground_truth'] = df_user_sku['user_sku'].isin(ground_truth['user_sku'])
-#df_user_sku['user_sku'].shape
-#ground_truth['user_sku'].shape
-print metric_list
-print performance(df_user_sku['ground_truth'], df_user_sku['buy'])
-print metrics.classification_report(df_user_sku['ground_truth'], df_user_sku['buy'])
-print metrics.confusion_matrix(df_user_sku['ground_truth'], df_user_sku['buy'])
-'''
-Official evaluation:
-    
-F11 = 6*Recall*Precision/(5*Recall+Precision), F12 = 5*Recall*Precision/(2*Recall+3*Precision)
-Score = 0.4*F11 + 0.6*F12
-'''
-Precision = metrics.precision_score(df_user_sku['ground_truth'], df_user_sku['buy'])   
-Recall = metrics.recall_score(df_user_sku['ground_truth'], df_user_sku['buy'])
-F11 = 6*Recall*Precision/(5*Recall+Precision)
-F12 = 5*Recall*Precision/(2*Recall+3*Precision)
-Score = 0.4*F11 + 0.6*F12
-print Score 
+
+# predict buy action
+X_unknown = np.array(df_per_unknown.drop(['buy8', 'buy4', 'buy2'],axis =1))
+#print X_unknown
+predictions = clf.predict(X_unknown)
+pre_prob = clf.predict_proba(X_unknown)
+print predictions,pre_prob
 
 
-# what about the accuracy of buy/nobuy prediction
-buy_or_nobuy = pd.DataFrame({'user_id': df_user_sku['user_id'].unique()})
-buy_or_nobuy['buy'] = buy_or_nobuy['user_id'].isin(df_user_sku.user_id[df_user_sku['buy'] == 1])
-buy_or_nobuy['ground_truth'] = buy_or_nobuy['user_id'].isin(ground_truth['user_id'])
-#buy_or_nobuy['buy'].value_counts()
-#buy_or_nobuy['ground_truth'].value_counts()    
-buy_or_nobuy = buy_or_nobuy.set_index('user_id') 
-buy_or_nobuy.to_csv(outputData + 'evalutation_n' + str(n) + '_cls' + cls +'.csv')  
+# In[ ]:
 
-print metric_list
-print performance(buy_or_nobuy['ground_truth'], buy_or_nobuy['buy'])
-print metrics.classification_report(buy_or_nobuy['ground_truth'], buy_or_nobuy['buy'])
-print metrics.confusion_matrix(buy_or_nobuy['ground_truth'], buy_or_nobuy['buy'])
+# merge predictions into dataframe
+df_user_sku['buy'] = predictions
+df_user_sku['buy_prob'] = pre_prob[:,1]
+#print df_user_sku
 
 
+# In[ ]:
+
+# filter out purchases
+df_buy = df_user_sku[df_user_sku['buy'] == 1]
+#print df_buy
+
+
+# In[ ]:
+
+# get best sku for each user
+def best_sku(df):
+  return (df.sort(['buy_prob'], ascending = False)).iloc[0,:]
+
+
+# In[ ]:
+
+# sku group by each user
+grouped = df_buy.groupby(['user_id'])
+results = grouped.apply(best_sku)
+
+
+# In[ ]:
+
+def int_to_str(id):
+  return str(int(id))
+
+# results
+outputData = 'results/'
+results = results.loc[:,['user_id','sku_id']]
+results['user_id'] = results['user_id'].apply(int_to_str)
+
+resultsfilename = outputData + 'results_n8_5window' + str(n) + '_cls' + cls +'.csv'
+results.to_csv(resultsfilename, index=False)

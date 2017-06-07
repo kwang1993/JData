@@ -11,17 +11,20 @@ from sklearn import ensemble
 from sklearn import linear_model 
 from sklearn import svm 
 from sklearn import neighbors
+from sklearn import metrics
+import matplotlib.pyplot as plt
 
-inputData = '../JData/'
-outputData = 'data/'
-
-
-n = 2
 test_size= .2
-samplemult = 1
+n = 8
 
+# -*- coding = utf-8 -*-
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import StratifiedShuffleSplit
+from sklearn.cross_validation import StratifiedKFold
+from sklearn import metrics
 
-def performance(y_true, y_pred, y_prob):
+def performance(model, y_true, y_pred, y_prob):
     """
     Calculates the performance metric based on the agreement between the 
     true labels and the predicted labels.
@@ -36,8 +39,8 @@ def performance(y_true, y_pred, y_prob):
         metric -- ndarray, performance measure
                   options: 'accuracy', 'f1-score', 'auroc', 'precision',
                            'sensitivity', 'specificity' 
-    """   
-
+    """
+    
     m = metrics.confusion_matrix(y_true, y_pred)
     #print m
     metric = np.zeros(6)
@@ -53,10 +56,25 @@ def performance(y_true, y_pred, y_prob):
     TN = m[1, 1]
     FP = m[0, 1]
     metric[5] = float(TN) / float(FP + TN)
-    
+
+    fpr, tpr, _ = metrics.roc_curve(y_true, y_prob)
+    roc_auc = metrics.auc(fpr, tpr)
+    plt.figure()
+    lw = 2
+    plt.plot(fpr, tpr, color='darkorange',
+             lw=lw, label='ROC curve (area = %0.2f)' % roc_auc)
+    plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title(model)
+    plt.legend(loc="lower right")
+    plt.show()
+
     return metric
 
-def cv_performance(clf, X, y, kf):
+def cv_performance(model, clf, X, y, kf):
     """
     Splits the data, X and y, into k-folds and runs k-fold cross-validation.
     Trains classifier on k-1 folds and tests on the remaining fold.
@@ -92,7 +110,7 @@ def cv_performance(clf, X, y, kf):
     '''
     clf.fit(X, y)
     y_prob = clf.predict_proba(X)
-    metric = performance(y, clf.predict(X), y_prob[:,1])
+    metric = performance(model, y, clf.predict(X), y_prob[:, 1])
     return metric
 
 def test_performance(clf, X_train, y_train, X_test, y_test, kf):
@@ -102,42 +120,59 @@ def test_performance(clf, X_train, y_train, X_test, y_test, kf):
 
 # -----training part------
 
-# read the stored training data
-df_per_all = pd.read_csv(outputData + 'df_per_all.csv', header = 0, index_col = 0)
-df_buy_counts = df_per_all['buy'].value_counts()
+df_user_cat = pd.read_csv('data/user_cluster.csv')
+dict_user_cat = df_user_cat.set_index('user_id')['cluster'].to_dict()
 
-for k in range(0, 5):
+df_pb = pd.read_csv('../JData/JData_Product.csv')
+def int_to_string(inputt):
     try:
-        df_buy_counts[k]
+        str(int(inputt))
     except:
-        df_buy_counts[k] = 0
-for k in range(0, 5):
-    print 'buy ', k, 'count = ', df_buy_counts[k] 
+        return '0'
+    else:
+        return str(int(inputt))
+# df1['user_cat'] = df1['age'].map(age_sex_string) + df1['sex'].map(age_sex_string) + df1['user_lv_cd'].map(lvcd_string) + df1['user_reg_tm'].map(regtm_string)
+df_pb['prod_cat'] = df_pb['a1'].map(int_to_string) + df_pb['a2'].map(int_to_string) + df_pb['a3'].map(int_to_string) + df_pb['cate'].map(int_to_string) + df_pb['brand'].map(int_to_string)
+df_sku_cat = df_pb.loc[:,['sku_id','prod_cat']]
+df_sku_cat = df_sku_cat.fillna('00000')
+dict_sku_cat = df_sku_cat.set_index('sku_id')['prod_cat'].to_dict()
+
+# read the stored training data
+df_per_all = pd.read_csv('data/df_per_all.csv', header = 0, index_col = 0)
+#df_per_all['user_cat'] = df_per_all['user_id'].map(dict_user_cat)
+#df_per_all['item_cat'] = df_per_all['sku_id'].map(dict_sku_cat)
+df_per_all.drop(['user_id', 'sku_id'], axis=1, inplace=True)
+print df_per_all.head(2)
+
+df_buy_counts = df_per_all['buy8'].value_counts()
 
 # convert the 'buy_number > 1' as 1
-df_per_all[df_per_all.buy > 1] = 1
+df_per_all[df_per_all.buy8 > 1] = 1
 
-df_buy_counts = df_per_all['buy'].value_counts()
+df_buy_counts = df_per_all['buy8'].value_counts()
 for k in range(0, 2):
     try:
         df_buy_counts[k]
     except:
         df_buy_counts[k] = 0
 for k in range(0, 2):
-    print 'buy ', k, 'count = ', df_buy_counts[k] 
+    print('buy ', k, 'count = ', df_buy_counts[k])
 
-X = np.array(df_per_all.drop('buy',axis =1))
-y = np.array(df_per_all['buy'])
+df_X = df_per_all.drop(['buy8', 'buy4', 'buy2'],axis =1)
+print df_X.columns
+X = np.array(df_X)
+y = np.array(df_per_all['buy8'])
 
-## split the train and test data
-#sss = StratifiedShuffleSplit(n_splits=1, test_size=test_size, random_state=0)
-#for train_index, test_index in sss.split(X, y):
-#    X_train, X_test = X[train_index], X[test_index]
-#    y_train, y_test = y[train_index], y[test_index]
+# split the train and test data
+from sklearn.model_selection import StratifiedShuffleSplit
+sss = StratifiedShuffleSplit(n_splits=1, test_size=test_size, random_state=0)
+for train_index, test_index in sss.split(X, y):
+    X_train, X_test = X[train_index], X[test_index]
+    y_train, y_test = y[train_index], y[test_index]
 
 # cv for train data
 #skf = StratifiedKFold(y_train, n_folds=5)
-skf = StratifiedKFold(y, n_folds=5)
+skf = StratifiedKFold(y_train, n_folds=5)
 
 #cls = 'tree' 
 #cls = 'bayes' 
@@ -149,19 +184,33 @@ skf = StratifiedKFold(y, n_folds=5)
 model = None
 model_name = 'tree'
 
+clf = ensemble.RandomForestClassifier(max_depth = 5)
+clf.fit(X, y)
+print clf.feature_importances_
+features = ['browser8', 'addchar8','delchar8', 'fav8', 'click8', 'browser4',
+       'addchar4', 'delchar4', 'fav4', 'click4', 'browser2', 'addchar2',
+       'delchar2', 'fav2', 'click2']
+fi = clf.feature_importances_
+plt.bar(range(len(features)), fi)
+
+plt.xticks(range(len(features)), features)
+plt.xticks(rotation = 45)
+plt.show()
+
+
 score = 0
-for cls in ['tree', 'bayes', 'GBDT', 'lr', 'rf', 'knn']:
-    if cls == 'tree':
+for cls in ['decision tree', 'naive bayes', 'GBDT', 'logistic regression', 'random forest', 'knn']:
+    if cls == 'decision tree':
       clf = tree.DecisionTreeClassifier()
-    if cls == 'bayes':
+    if cls == 'naive bayes':
       clf = naive_bayes.GaussianNB()
     if cls == 'GBDT':
       clf = ensemble.GradientBoostingClassifier()
-    if cls == 'lr':
+    if cls == 'logistic regression':
       clf = linear_model.LogisticRegression()
     if cls == 'svm':  
       clf = svm.SVC(kernel = 'linear')
-    if cls == 'rf':
+    if cls == 'random forest':
       clf = ensemble.RandomForestClassifier(max_depth = 5)
     if cls == 'knn':  
       clf = neighbors.KNeighborsClassifier()
@@ -169,7 +218,7 @@ for cls in ['tree', 'bayes', 'GBDT', 'lr', 'rf', 'knn']:
     print "cv Performance for " + cls
     metric_list = ["accuracy", "f1_score", "auroc", "precision", "sensitivity", "specificity"]
     #metric = cv_performance(clf, X_train, y_train, skf)
-    metric = cv_performance(clf, X, y, skf)
+    metric = cv_performance(cls, clf, X_train, y_train, skf)
     print metric_list
     print metric
     if metric[0] > score:
@@ -177,26 +226,31 @@ for cls in ['tree', 'bayes', 'GBDT', 'lr', 'rf', 'knn']:
         model = clf
         model_name = cls
 print model_name # GBDT
+
+'''
+print "test Performance for " + model_name
+metric_list = ["accuracy", "f1_score", "auroc", "precision", "sensitivity", "specificity"]
+metric = test_performance(model, X_train, y_train, X_test, y_test, skf)
+print metric_list
+print metric
+
+'''
+
+
 clf = model
 clf.fit(X, y)
-#print list(df_per_all.drop('buy',axis =1).columns)
-#print clf.feature_importances_ 
-
-# -----testing part------
-
-
-
 # -------read features and user_sku pairs to predict -------
-filename_unknown = outputData + '20160416unknown_per.csv'
-df_user_sku = pd.read_csv(outputData + '201604_user_sku.csv', header = 0, index_col = 0)
+filename_unknown = 'data/20160416unknown_per.csv'
+df_user_sku = pd.read_csv('data/201604_user_sku.csv', header = 0, index_col = 0)
 df_per_unknown = pd.read_csv(filename_unknown, header = 0, index_col = 0)
+df_per_unknown.drop(['user_id', 'sku_id'], axis=1, inplace=True)
 
 
 # In[ ]:
 
 # predict buy action
-X_unknown = np.array(df_per_unknown.drop('buy',axis =1))
-print X_unknown
+X_unknown = np.array(df_per_unknown.drop(['buy8', 'buy4', 'buy2'],axis =1))
+#print X_unknown
 predictions = clf.predict(X_unknown)
 pre_prob = clf.predict_proba(X_unknown)
 print predictions,pre_prob
@@ -207,14 +261,14 @@ print predictions,pre_prob
 # merge predictions into dataframe
 df_user_sku['buy'] = predictions
 df_user_sku['buy_prob'] = pre_prob[:,1]
-print df_user_sku
+#print df_user_sku
 
 
 # In[ ]:
 
 # filter out purchases
 df_buy = df_user_sku[df_user_sku['buy'] == 1]
-print df_buy
+#print df_buy
 
 
 # In[ ]:
@@ -237,13 +291,14 @@ def int_to_str(id):
   return str(int(id))
 
 # results
+outputData = 'results/'
 results = results.loc[:,['user_id','sku_id']]
 results['user_id'] = results['user_id'].apply(int_to_str)
 
 resultsfilename = outputData + 'results_n' + str(n) + '_cls' + cls +'.csv'
 results.to_csv(resultsfilename, index=False)
 
-
+'''
 
 # In[ ]:
     
@@ -255,15 +310,10 @@ df_user_sku['ground_truth'] = df_user_sku['user_sku'].isin(ground_truth['user_sk
 #df_user_sku['user_sku'].shape
 #ground_truth['user_sku'].shape
 print metric_list
-print performance(df_user_sku['ground_truth'], df_user_sku['buy'], df_user_sku['buy_prob'])
+print performance(df_user_sku['ground_truth'], df_user_sku['buy'])
 print metrics.classification_report(df_user_sku['ground_truth'], df_user_sku['buy'])
 print metrics.confusion_matrix(df_user_sku['ground_truth'], df_user_sku['buy'])
-'''
-Official evaluation:
-    
-F11 = 6*Recall*Precision/(5*Recall+Precision), F12 = 5*Recall*Precision/(2*Recall+3*Precision)
-Score = 0.4*F11 + 0.6*F12
-'''
+
 Precision = metrics.precision_score(df_user_sku['ground_truth'], df_user_sku['buy'])   
 Recall = metrics.recall_score(df_user_sku['ground_truth'], df_user_sku['buy'])
 F11 = 6*Recall*Precision/(5*Recall+Precision)
@@ -281,10 +331,9 @@ buy_or_nobuy['ground_truth'] = buy_or_nobuy['user_id'].isin(ground_truth['user_i
 buy_or_nobuy = buy_or_nobuy.set_index('user_id') 
 buy_or_nobuy.to_csv(outputData + 'evalutation_n' + str(n) + '_cls' + cls +'.csv')  
 
-#print metric_list
-#print performance(buy_or_nobuy['ground_truth'], buy_or_nobuy['buy'])
+print metric_list
+print performance(buy_or_nobuy['ground_truth'], buy_or_nobuy['buy'])
 print metrics.classification_report(buy_or_nobuy['ground_truth'], buy_or_nobuy['buy'])
 print metrics.confusion_matrix(buy_or_nobuy['ground_truth'], buy_or_nobuy['buy'])
 
-
-
+'''
