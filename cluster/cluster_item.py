@@ -72,7 +72,7 @@ for i, row in enumerate(cluster_item.itertuples(), 1):
         print i / 10000
     if pd.isnull(getattr(row, "average_delta_time")):   # not buy
         index = int(getattr(row, "sku_id"))
-        row_to_index_buy[jnb] = index
+        row_to_index_nbuy[jnb] = index
 
         a1 = getattr(row, "a1")
         add_feature_nbuy(jnb, 0, a1)
