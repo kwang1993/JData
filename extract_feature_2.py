@@ -36,14 +36,10 @@ df.to_csv(outputData + 'action34.csv')
 # split data
 
 '''
-# 从dataSet_path中按照 BEGINDAY, ENDDAY 拆分数据集
-    #以2016-03-17到2016-04-05数据   预测2016-04-06到2016-04-10某用户是否下单某商品
-    #以2016-03-22到2016-04-10数据   预测2016-04-11到2016-04-15某用户是否下单某商品
-    #以2016-03-27到2016-04-15数据   预测2016-04-16到2016-04-20某用户是否下单某商品
-    
-    # 以2016-03-10到2016-04-05数据   预测2016-04-06到2016-04-10某用户是否下单某商品
-    # 以2016-03-15到2016-04-10数据   预测2016-04-11到2016-04-15某用户是否下单某商品
-    # 以2016-03-20到2016-04-15数据   预测2016-04-16到2016-04-20某用户是否下单某商品
+# split dataset
+# Predict the period between 2016-04-06 and 2016-04-10 with 2016-03-17 to 2016-04-05
+# Predict the period between 2016-04-11 and 2016-04-15 with 2016-03-22 to 2016-04-10
+# Predict the period between 2016-04-16 and 2016-04-20 with 2016-03-27 to 2016-04-15
 '''
 df.info()
 
@@ -87,18 +83,18 @@ def special_per(n, df_action_all, df_action_special, dict_user_cat, dict_sku_cat
 
     '''
 
-    # df_action_special变为array,加快索引效率
+
     array_user_id = np.array(df_action_special['user_id'])
     array_sku_id = np.array(df_action_special['sku_id'])
     array_time = np.array(df_action_special['time'])
 
-    # 建立特征值DataFrame
+    # build features
     df_per = pd.DataFrame(columns=('browser8', 'addchar8', 'delchar8', 'buy8', 'fav8', 'click8', 
                                    'browser4', 'addchar4', 'delchar4', 'buy4', 'fav4', 'click4', 
                                    'browser2', 'addchar2', 'delchar2', 'buy2', 'fav2', 'click2', 
                                    'user_cate', 'sku_cate', 'label'))
 
-    # 循环建立各个specail行为前n天的特征值
+    # for each special action build feature
     for i in range(len(df_action_special)):
         print i
         user = array_user_id[i]
@@ -108,16 +104,16 @@ def special_per(n, df_action_all, df_action_special, dict_user_cat, dict_sku_cat
         # print sku,df_pb[df_pb['sku_id'] == sku]
         sku_cat = dict_sku_cat[sku]
         time = array_time[i]
-        # 时间前移10天
+        # previous n days
         time_s_datetime8 = pd.datetime.strptime(time , '%Y-%m-%d %H:%M:%S') - pd.Timedelta(days = 8)
         time_s_datetime4 = pd.datetime.strptime(time , '%Y-%m-%d %H:%M:%S') - pd.Timedelta(days = 4)
         time_s_datetime2 = pd.datetime.strptime(time , '%Y-%m-%d %H:%M:%S') - pd.Timedelta(days = 2)
         time_s_string8 = pd.datetime.strftime(time_s_datetime8 , '%Y-%m-%d %H:%M:%S')
         time_s_string4 = pd.datetime.strftime(time_s_datetime4 , '%Y-%m-%d %H:%M:%S')
         time_s_string2 = pd.datetime.strftime(time_s_datetime2 , '%Y-%m-%d %H:%M:%S')
-        # 筛选购买动作前n天的数据
+        # filter data
         df_action_p8 = df_action_all[(df_action_all['user_id'] == user) & (df_action_all['sku_id'] == sku) & (df_action_all['time'] > time_s_string8) & (df_action_all['time'] <= time)]
-        # 动作数据集记录以上数据索引,标记为已使用过的数据,以便之后删除
+        # mark and sweep
         df_action_p4 = df_action_p8[(df_action_p8['time'] > time_s_string4)]
         df_action_p2 = df_action_p4[(df_action_p4['time'] > time_s_string2)]
 #        if i > 0:
@@ -125,10 +121,10 @@ def special_per(n, df_action_all, df_action_special, dict_user_cat, dict_sku_cat
 #        else:
 #            df_action_special_index = df_action_p8.index
         # print len(df_action_nobuy)
-        # 提取特征值,各项动作的次数
+
         # print len(df_action_nobuy)
         df_action_type_counts8 = df_action_p8['type'].value_counts()
-        # 处理异常数据\缺失值
+		# fillna
         for k in range(1,7):
             try:
                 df_action_type_counts8[k]
@@ -136,7 +132,7 @@ def special_per(n, df_action_all, df_action_special, dict_user_cat, dict_sku_cat
                 df_action_type_counts8[k] = 0
 
         df_action_type_counts4 = df_action_p4['type'].value_counts()
-        # 处理异常数据\缺失值
+
         for k in range(1,7):
             try:
                 df_action_type_counts4[k]
@@ -144,13 +140,13 @@ def special_per(n, df_action_all, df_action_special, dict_user_cat, dict_sku_cat
                 df_action_type_counts4[k] = 0
 
         df_action_type_counts2 = df_action_p2['type'].value_counts()
-        # 处理异常数据\缺失值
+
         for k in range(1,7):
             try:
                 df_action_type_counts2[k]
             except:
                 df_action_type_counts2[k] = 0
-        # 写入一行数据特征值
+        # Write a row of features
         df_per.loc[i]={'user_cate':user_cat,'sku_cate':sku_cat,
                        'browser8':df_action_type_counts8[1],'addchar8':df_action_type_counts8[2],'delchar8':df_action_type_counts8[3],'buy8':df_action_type_counts8[4],'fav8':df_action_type_counts8[5],'click8':df_action_type_counts8[6],
                        'browser4':df_action_type_counts4[1],'addchar4':df_action_type_counts4[2],'delchar4':df_action_type_counts4[3],'buy4':df_action_type_counts4[4],'fav4':df_action_type_counts4[5],'click4':df_action_type_counts4[6],
