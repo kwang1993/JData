@@ -1,4 +1,4 @@
-# JData competition
+# JData Competition
 
 This project aims to predict what customers will buy in the next five days based on the three months' data of user behavior online like click, browse, add to cart and purchase.
 
@@ -9,6 +9,7 @@ Group Member:
   Xin Xu,
   Jiuru Shao
 
+# Code Structure
 Main functions:
   extract_feature.py
   train.py
