@@ -2,14 +2,14 @@
 
 This project aims to predict what customers will buy in the next five days based on the three months' data of user behavior online like click, browse, add to cart and purchase.
 
-# CS249-2 Team SVM
+## CS249-2 Team SVM
 
 Group Member:
   Kaicheng Wang,
   Xin Xu,
   Jiuru Shao
 
-# Code Structure
+## Code Structure
 Main functions:
   extract_feature.py
   train.py
