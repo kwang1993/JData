@@ -4,32 +4,32 @@ This project aims to predict what customers will buy in the next five days based
 
 ## CS249-2 Team SVM
 
-Group Member:
-  Kaicheng Wang,
-  Xin Xu,
-  Jiuru Shao
+Group Member:<br />
+  Kaicheng Wang,<br />
+  Xin Xu,<br />
+  Jiuru Shao<br />
 
 ## Code Structure
-Main functions:
-  extract_feature.py
-  train.py
-or
-  extract_feature_2.py
-  train_2.py
+Main functions:<br />
+  extract_feature.py<br />
+  train.py<br />
+or<br />
+  extract_feature_2.py<br />
+  train_2.py<br />
 
-Other functions:
-  get_last_five_days.py
-    split data from 04/11 to 04/15
+Other functions:<br />
+  get_last_five_days.py<br />
+    split data from 04/11 to 04/15<br />
   
-/cluster
-  code for cluster
-/data_analysis
-  code for data analysis
+/cluster<br />
+  code for cluster<br />
+/data_analysis<br />
+  code for data analysis<br />
   
-/data:
-  middle files
-/data_1:
-  middle files
-/results:
-  results
+/data:<br />
+  middle files<br />
+/data_1:<br />
+  middle files<br />
+/results:<br />
+  results<br />
  
